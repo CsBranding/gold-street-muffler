@@ -188,3 +188,122 @@ export class Particles {
     (a.aAlpha as THREE.BufferAttribute).needsUpdate = true;
   }
 }
+
+/** Spinning chunks with gravity and a ground bounce (barrels, crates, cruisers). */
+export class Debris {
+  readonly mesh: THREE.InstancedMesh;
+  private pos: Float32Array;
+  private vel: Float32Array;
+  private rot: Float32Array;
+  private spin: Float32Array;
+  private size: Float32Array;
+  private life: Float32Array;
+  private next = 0;
+  private m = new THREE.Matrix4();
+  private q = new THREE.Quaternion();
+  private e = new THREE.Euler();
+  private p = new THREE.Vector3();
+  private s = new THREE.Vector3();
+  constructor(private max: number, private lifeSec: number, material: THREE.Material) {
+    this.mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), material, max);
+    this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(max * 3).fill(1), 3);
+    this.mesh.frustumCulled = false;
+    this.mesh.castShadow = true;
+    this.pos = new Float32Array(max * 3);
+    this.vel = new Float32Array(max * 3);
+    this.rot = new Float32Array(max * 3);
+    this.spin = new Float32Array(max * 3);
+    this.size = new Float32Array(max);
+    this.life = new Float32Array(max);
+    this.m.makeScale(0, 0, 0);
+    for (let i = 0; i < max; i++) this.mesh.setMatrixAt(i, this.m);
+  }
+  burst(x: number, y: number, z: number, n: number, colors: THREE.Color[], power: number, size: number): void {
+    for (let k = 0; k < n; k++) {
+      const i = this.next;
+      this.next = (this.next + 1) % this.max;
+      const a = Math.random() * Math.PI * 2;
+      const sp = power * (0.4 + Math.random() * 0.8);
+      this.pos.set([x + (Math.random() - 0.5) * 0.6, y + Math.random() * 0.5, z + (Math.random() - 0.5) * 0.4], i * 3);
+      // biased away from the crew (+z) so chunks fly "downrange"
+      this.vel.set([Math.cos(a) * sp, power * (0.8 + Math.random()), Math.abs(Math.sin(a)) * sp * 0.8 + 1], i * 3);
+      this.spin.set([(Math.random() - 0.5) * 18, (Math.random() - 0.5) * 18, (Math.random() - 0.5) * 18], i * 3);
+      this.size[i] = size * (0.5 + Math.random());
+      this.life[i] = this.lifeSec * (0.7 + Math.random() * 0.5);
+      this.mesh.setColorAt(i, colors[k % colors.length]);
+    }
+    this.mesh.instanceColor!.needsUpdate = true;
+  }
+  update(dt: number): void {
+    let any = false;
+    for (let i = 0; i < this.max; i++) {
+      if (this.life[i] <= 0) continue;
+      any = true;
+      this.life[i] -= dt;
+      const o = i * 3;
+      this.vel[o + 1] -= 18 * dt;
+      for (let a = 0; a < 3; a++) {
+        this.pos[o + a] += this.vel[o + a] * dt;
+        this.rot[o + a] += this.spin[o + a] * dt;
+      }
+      if (this.pos[o + 1] < this.size[i] * 0.3) {
+        this.pos[o + 1] = this.size[i] * 0.3;
+        this.vel[o + 1] *= -0.35;
+        this.vel[o] *= 0.6;
+        this.vel[o + 2] *= 0.6;
+        for (let a = 0; a < 3; a++) this.spin[o + a] *= 0.5;
+      }
+      const shrink = Math.min(1, this.life[i] / 0.3);
+      this.p.set(this.pos[o], this.pos[o + 1], this.pos[o + 2]);
+      this.q.setFromEuler(this.e.set(this.rot[o], this.rot[o + 1], this.rot[o + 2]));
+      this.s.set(this.size[i], this.size[i] * 0.6, this.size[i] * 0.9).multiplyScalar(this.life[i] > 0 ? shrink : 0);
+      this.m.compose(this.p, this.q, this.s);
+      this.mesh.setMatrixAt(i, this.m);
+    }
+    if (any) this.mesh.instanceMatrix.needsUpdate = true;
+  }
+}
+
+/** Expanding ground rings for impacts (slams, explosions, gate pops). */
+export class Shockwaves {
+  readonly group = new THREE.Group();
+  private rings: { mesh: THREE.Mesh; t: number; dur: number; r: number }[] = [];
+  private next = 0;
+  constructor(n = 8) {
+    for (let i = 0; i < n; i++) {
+      const mesh = new THREE.Mesh(
+        new THREE.RingGeometry(0.85, 1, 48),
+        new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }),
+      );
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.visible = false;
+      mesh.renderOrder = 3;
+      this.group.add(mesh);
+      this.rings.push({ mesh, t: 0, dur: 1, r: 1 });
+    }
+  }
+  spawn(x: number, z: number, radius: number, color: THREE.Color, dur = 0.45): void {
+    const ring = this.rings[this.next];
+    this.next = (this.next + 1) % this.rings.length;
+    ring.t = 0;
+    ring.dur = dur;
+    ring.r = radius;
+    ring.mesh.position.set(x, 0.06, z);
+    (ring.mesh.material as THREE.MeshBasicMaterial).color.copy(color);
+    ring.mesh.visible = true;
+  }
+  update(dt: number): void {
+    for (const ring of this.rings) {
+      if (!ring.mesh.visible) continue;
+      ring.t += dt;
+      const k = ring.t / ring.dur;
+      if (k >= 1) {
+        ring.mesh.visible = false;
+        continue;
+      }
+      ring.mesh.scale.setScalar(ring.r * (0.2 + 0.8 * (1 - Math.pow(1 - k, 3))));
+      (ring.mesh.material as THREE.MeshBasicMaterial).opacity = 1 - k;
+    }
+  }
+}

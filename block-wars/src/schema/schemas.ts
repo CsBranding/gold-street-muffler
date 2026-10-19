@@ -507,6 +507,16 @@ export const GameFileSchema = z.object({
     }),
   }),
   runCap: z.object({ maxLevelSec: pos }),
+  audio: z.object({ master: frac, sfx: frac, music: frac, bpm: pos, maxShotVoicesPerSec: pos }),
+  feel: z.object({
+    /** brief time-scale dip on big impacts */
+    hitStopSec: nonNeg,
+    hitStopScale: frac,
+    recruitLeapSec: pos,
+    recruitLeapHeight: nonNeg,
+    maxDebris: z.number().int().positive(),
+    debrisLife: pos,
+  }),
   /** real-time delays before result/fail screens appear */
   flow: z.object({ winDelaySec: nonNeg, failDelaySec: nonNeg }),
 });

@@ -15,12 +15,13 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { BlobShadows, RiggedActor, UnitFamily, type CrowdClip } from './crowds';
-import { Particles, Tracers } from './effects';
+import { Debris, Particles, Shockwaves, Tracers } from './effects';
 import { buildEnvironment, type Environment } from './environment';
 import { buildProp } from './props';
 import { bossClips, buildSkinnedMesh, copLook, humanoidClips, lookFromOutfit, type Look } from './rig';
 import { gateLabel, gateTexture, glowTexture, rewardTexture } from './textures';
-import { stylizedMaterial } from './vat';
+import { stylizedMaterial, toonGradient } from './vat';
+import { buildDirtBike, buildLowrider } from './vehicles';
 
 export interface RenderHooks {
   onKillHaptic(): void;
@@ -29,6 +30,14 @@ export interface RenderHooks {
 const tmpP = new THREE.Vector3();
 /** stable per-unit loop offset so neighbours never animate in lockstep */
 const phaseOf = (i: number) => ((i * 0.6180339) % 1) * 0.6;
+const cols = (...c: string[]) => c.map((x) => new THREE.Color(x));
+const DEBRIS_COLORS: Record<string, THREE.Color[]> = {
+  barrel: cols('#a0602e', '#6e3d1a', '#7c8189'),
+  crate: cols('#a0602e', '#c08048', '#6e3d1a'),
+  dumpster: cols('#2f6b45', '#214d31', '#555'),
+  cruiser: cols('#121317', '#f0f0f0', '#2b3a4f', '#ff2a3a', '#2a7bff'),
+  barricade: cols('#a0602e', '#9aa0a8', '#6e3d1a'),
+};
 const C_TRACER = new THREE.Color('#ffd27a');
 const C_TRACER_LEADER = new THREE.Color('#fff2b0');
 const C_FLASH = new THREE.Color('#ffcc55');
@@ -62,6 +71,13 @@ export class BattleRenderer {
   private leader: RiggedActor | null = null;
   private leaderRing: THREE.Mesh | null = null;
   private blobs: BlobShadows;
+  private debris: Debris;
+  private shock = new Shockwaves();
+  /** where this frame's recruits come from (gate or recruit barrel), so they leap in from there */
+  private recruitSrc: { x: number; z: number } | null = null;
+  private leap = new Uint8Array(0);
+  private lowrider: THREE.Group | null = null;
+  private bike: THREE.Group | null = null;
   private composer: EffectComposer | null = null;
   private bloom: UnrealBloomPass | null = null;
   private targets = new Float32Array(0);
@@ -138,7 +154,8 @@ export class BattleRenderer {
     }
     this.scene.add(this.hemi, this.sun, this.sun.target, this.level);
     this.blobs = new BlobShadows(r.maxCrewInstances + r.maxEnemyInstances);
-    this.scene.add(this.blobs.mesh);
+    this.debris = new Debris(cfg.game.feel.maxDebris, cfg.game.feel.debrisLife, new THREE.MeshToonMaterial({ color: '#ffffff', gradientMap: toonGradient() }));
+    this.scene.add(this.blobs.mesh, this.debris.mesh, this.shock.group);
     if (r.bloom) {
       this.composer = new EffectComposer(this.renderer);
       this.composer.addPass(new RenderPass(this.scene, this.camera));
@@ -225,6 +242,14 @@ export class BattleRenderer {
     this.dispX = new Float32Array(maxCrew);
     this.dispZ = new Float32Array(maxCrew);
     this.pop = new Float32Array(maxCrew).fill(1);
+    this.leap = new Uint8Array(maxCrew);
+    const vScale = cfg.game.crowd.leaderScale * 1.15;
+    this.lowrider = buildLowrider(faction.id === 'red' ? '#7a1020' : '#123a8a');
+    this.bike = buildDirtBike(faction.colors.primary);
+    this.lowrider.scale.setScalar(vScale);
+    this.bike.scale.setScalar(vScale);
+    this.lowrider.visible = this.bike.visible = false;
+    this.level.add(this.lowrider, this.bike);
     this.shownCount = 0;
     this.crowdX = battle.crowd.x;
     this.crowdZ = battle.crowd.z;
@@ -395,6 +420,8 @@ export class BattleRenderer {
           const p = this.props.get(e.id);
           if (p) {
             p.group.visible = false;
+            this.debris.burst(e.x, 0.6, e.z, e.kind === 'cruiser' ? 22 : 16, DEBRIS_COLORS[e.kind] ?? DEBRIS_COLORS.barrel, e.kind === 'cruiser' ? 7 : 5, e.kind === 'cruiser' ? 0.35 : 0.25);
+            this.shock.spawn(e.x, e.z, 2.2, C_SPARK, 0.35);
             this.smoke.burst(e.x, 0.8, e.z, { count: 14, color: C_SMOKE, speed: 3, up: 1.5, size: 1.1, life: 0.7 });
             this.sparks.burst(e.x, 1, e.z, { count: 14, color: new THREE.Color('#a0602e'), speed: 5, up: 4, size: 0.3, life: 0.6, gravity: 12, drag: 1 });
           }
@@ -403,11 +430,14 @@ export class BattleRenderer {
         }
         case 'reward': {
           const color = new THREE.Color(cfg.game.rarityColors[e.rarity as 'common']);
+          if (e.reward.kind === 'recruits') this.recruitSrc = { x: e.x, z: e.z };
           this.sparks.burst(e.x, 2.2, e.z, { count: 24, color, speed: 4, up: 3, size: 0.35, life: 0.6, gravity: 4 });
           this.overlay.spawnDamage(e.x, 2.8, e.z, rewardText(cfg, e.reward), `reward r-${e.rarity}`);
           break;
         }
         case 'explode':
+          this.shock.spawn(e.x, e.z, e.r * 1.4, C_FIRE, 0.5);
+          this.debris.burst(e.x, 0.6, e.z, 14, DEBRIS_COLORS.cruiser, 9, 0.3);
           this.sparks.burst(e.x, 0.8, e.z, { count: 40, color: C_FIRE, speed: e.r * 2, up: 3, size: 0.8, life: 0.5, drag: 3 });
           this.smoke.burst(e.x, 1, e.z, { count: 24, color: new THREE.Color('#3b3b40'), speed: e.r, up: 2, size: 2, life: 1.1, drag: 2 });
           this.shake = 0.7;
@@ -415,6 +445,8 @@ export class BattleRenderer {
         case 'gate': {
           const color = new THREE.Color(e.negative ? '#888888' : this.factionColor);
           this.sparks.burst(battle.crowd.x, 1, e.z, { count: 30, color, speed: 5, up: 3, size: 0.35, life: 0.5, gravity: 5 });
+          this.shock.spawn(battle.crowd.x, battle.crowd.z, 2.5 + this.cfg.game.crowd.maxHalfWidth * 0.5, color, 0.4);
+          if (!e.negative) this.recruitSrc = { x: battle.crowd.x, z: e.z + 0.5 };
           this.overlay.spawnDamage(battle.crowd.x, 2.5, e.z, `${gateLabel(e.op, e.value)}`, e.negative ? 'gate-neg' : 'gate-pos');
           break;
         }
@@ -438,6 +470,8 @@ export class BattleRenderer {
           if (e.attackId === 'baton_slam' || e.attackId === 'taser_chain') {
             const col = e.attackId === 'taser_chain' ? new THREE.Color('#9fe3ff') : new THREE.Color('#d9d2c0');
             this.sparks.burst(e.x, 0.3, e.z, { count: 50, color: col, speed: e.r * 3, up: 2, size: 0.5, life: 0.45, drag: 3, spread: e.r * 3 });
+            this.shock.spawn(e.x, e.z, e.r * 1.25, col, 0.5);
+            this.shock.spawn(e.x, e.z, e.r * 0.7, col, 0.3);
             this.smoke.burst(e.x, 0.3, e.z, { count: 16, color: C_SMOKE, speed: e.r * 2, up: 1, size: 1.6, life: 0.7 });
             this.shake = 0.8;
             if (e.killed > 0) this.overlay.spawnDamage(e.x, 2, e.z, `-${e.killed}`, 'gate-neg');
@@ -532,6 +566,8 @@ export class BattleRenderer {
     this.updateBoss(battle, dt);
     this.updateCamera(battle, dt);
     this.tracers.update(dt);
+    this.debris.update(dt);
+    this.shock.update(dt);
     this.sparks.update(dt);
     this.smoke.update(dt);
     this.updateLabels(battle);
@@ -557,13 +593,24 @@ export class BattleRenderer {
       for (let i = Math.max(1, count); i < this.shownCount; i += step)
         this.crew[i % this.crew.length]?.spawnCorpse(this.crowdX + this.dispX[i], this.crowdZ + this.dispZ[i], 0, 1, this.time);
     }
+    const src = this.recruitSrc;
     for (let i = this.shownCount; i < count; i++) {
-      // recruits pop in at their slot (spawned slightly inward for a burst feel)
-      this.dispX[i] = this.targets[i * 2] * 0.3;
-      this.dispZ[i] = this.targets[i * 2 + 1] * 0.3;
+      if (src) {
+        // recruits leap out of the gate / barrel that produced them and run into formation
+        this.dispX[i] = src.x - this.crowdX + (Math.random() - 0.5) * 2.4;
+        this.dispZ[i] = src.z - this.crowdZ + (Math.random() - 0.5) * 0.8;
+        this.leap[i] = 1;
+      } else {
+        // otherwise pop in at their slot (spawned slightly inward for a burst feel)
+        this.dispX[i] = this.targets[i * 2] * 0.3;
+        this.dispZ[i] = this.targets[i * 2 + 1] * 0.3;
+        this.leap[i] = 0;
+      }
       this.pop[i] = 0;
     }
+    this.recruitSrc = null;
     this.shownCount = count;
+    const feel = cfg.game.feel;
 
     const lock = battle.laneLock;
     const lo = lock ? lock.wall.edges[lock.lane] + 0.2 : -Infinity;
@@ -579,10 +626,12 @@ export class BattleRenderer {
     const blockers: ObstacleRT[] = [];
     for (const o of battle.level.obstacles)
       if (o.alive && o.z > this.crowdZ - 30 && o.z < this.crowdZ + 6 && blockers.length < 8) blockers.push(o);
+    const vs = cfg.game.crowd.leaderScale * 1.15;
+    const rideHalf = battle.buffs.lowrider > 0 ? { w: 0.65 * vs, d: 1.3 * vs } : battle.buffs.dirtBike > 0 ? { w: 0.35 * vs, d: 0.8 * vs } : null;
     for (let i = 1; i < count; i++) {
       this.dispX[i] += (this.targets[i * 2] - this.dispX[i]) * k;
       this.dispZ[i] += (this.targets[i * 2 + 1] - this.dispZ[i]) * k;
-      if (this.pop[i] < 1) this.pop[i] = Math.min(1, this.pop[i] + dt * 5);
+      if (this.pop[i] < 1) this.pop[i] = Math.min(1, this.pop[i] + dt / (this.leap[i] ? feel.recruitLeapSec : 0.2));
       let x = this.crowdX + this.dispX[i];
       const z = this.crowdZ + this.dispZ[i];
       if (lock && z > lock.wall.z0 && z < lock.wall.z1) x = Math.max(lo, Math.min(hi, x));
@@ -590,17 +639,43 @@ export class BattleRenderer {
         const hw = o.halfW + 0.15;
         if (Math.abs(z - o.z) < o.halfD + 0.2 && Math.abs(x - o.x) < hw) x = x < o.x ? o.x - hw : o.x + hw;
       }
+      // the crew makes room around the leader's ride
+      if (rideHalf && Math.abs(z - this.crowdZ) < rideHalf.d && Math.abs(x - this.crowdX) < rideHalf.w) x = x < this.crowdX ? this.crowdX - rideHalf.w : this.crowdX + rideHalf.w;
       x = Math.max(-roadHalf, Math.min(roadHalf, x));
-      const s = this.pop[i] < 1 ? easeOutBack(this.pop[i]) : 1;
-      this.crew[i % nVar].add(x, z, 0, s, clip, phaseOf(i), this.lodFor(z - camZ), speed);
+      const leaping = this.leap[i] && this.pop[i] < 1;
+      const s = this.pop[i] < 1 && !leaping ? easeOutBack(this.pop[i]) : 1;
+      const y = leaping ? Math.sin(Math.PI * this.pop[i]) * feel.recruitLeapHeight : 0;
+      this.crew[i % nVar].add(x, z, 0, s, leaping ? 'cheer' : clip, phaseOf(i), this.lodFor(z - camZ), speed, y);
       this.blobs.add(x, z, 0.55 * s);
     }
     for (const f of this.crew) f.end();
     if (this.leader && this.leaderRing) {
       const L = this.leader;
       L.mesh.visible = c.leaderHp > 0 || battle.status === 'failed';
-      L.mesh.position.set(this.crowdX, 0, this.crowdZ);
-      const want = battle.status === 'failed' ? 'fall' : clip;
+      // vehicles: the leader rides the pickup (lowrider hops on hydraulics, bike leans)
+      const riding = battle.buffs.lowrider > 0 ? this.lowrider : battle.buffs.dirtBike > 0 ? this.bike : null;
+      let ride = 0;
+      for (const v of [this.lowrider, this.bike]) {
+        if (!v) continue;
+        v.visible = v === riding;
+        if (!v.visible) continue;
+        v.position.set(this.crowdX, 0, this.crowdZ);
+        v.traverse((o) => (o.name === 'wheel' ? (o.rotation.x += dt * 22) : null));
+        if (v === this.lowrider) {
+          const body = v.getObjectByName('body')!;
+          const hop = Math.abs(Math.sin(this.time * 7)) * 0.16;
+          body.position.y = hop;
+          body.rotation.z = Math.sin(this.time * 3.5) * 0.07;
+          body.rotation.x = Math.sin(this.time * 7) * 0.05;
+          ride = (0.33 + hop) * v.scale.y;
+        } else {
+          v.rotation.z = (this.crowdX - c.x) * -0.4;
+          ride = 0.42 * v.scale.y;
+        }
+        if (Math.random() < dt * 30) this.smoke.burst(this.crowdX + (Math.random() - 0.5) * 0.5, 0.25, this.crowdZ - 1.2, { count: 1, color: C_SMOKE, speed: 0.6, up: 0.6, size: 0.6, life: 0.5 });
+      }
+      L.mesh.position.set(this.crowdX, ride, this.crowdZ);
+      const want = battle.status === 'failed' ? 'fall' : riding ? 'aim' : clip;
       L.play(want, 0.18, { once: want === 'fall' });
       L.update(dt * (want === 'run' ? speed : 1));
       this.blobs.add(this.crowdX, this.crowdZ, 0.8);

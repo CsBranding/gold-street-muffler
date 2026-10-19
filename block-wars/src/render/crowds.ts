@@ -97,13 +97,13 @@ export class UnitFamily {
    * lod: 0 hi, 1 lo, 2 far (hi falls back to lo past hiCap).
    * phase: seconds of loop offset so neighbours never move in lockstep.
    */
-  add(x: number, z: number, yaw: number, scale: number, clip: CrowdClip, phase: number, lod: 0 | 1 | 2, speed = 1): void {
+  add(x: number, z: number, yaw: number, scale: number, clip: CrowdClip, phase: number, lod: 0 | 1 | 2, speed = 1, y = 0): void {
     if (lod === 0 && this.nHi >= this.hiCap) lod = 1;
     const mesh = lod === 0 ? this.hi : lod === 1 ? this.lo : this.far;
     const asset = lod === 0 ? this.hiAsset : lod === 1 ? this.loAsset : this.farAsset;
     const i = lod === 0 ? this.nHi : lod === 1 ? this.nLo : this.nFar;
     if (i >= mesh.instanceMatrix.count) return;
-    tmpP.set(x, 0, z);
+    tmpP.set(x, y, z);
     tmpQ.setFromAxisAngle(UP, yaw);
     tmpS.setScalar(scale);
     tmpM.compose(tmpP, tmpQ, tmpS);

@@ -20,6 +20,7 @@ export class GameSession {
   paused = false;
   readonly autoplay: boolean;
   private acc = 0;
+  private hitStop = 0;
   /** rolling ms per frame spent stepping the sim */
   simMs = 0;
   private endTimer = -1;
@@ -109,6 +110,10 @@ export class GameSession {
     let scale = 1;
     const boss = b.level.boss;
     if (boss && boss.state === 'dead' && boss.deadT < cfg.game.boss.slowMoSec) scale = cfg.game.boss.slowMoScale;
+    if (this.hitStop > 0) {
+      this.hitStop -= dt;
+      scale = Math.min(scale, cfg.game.feel.hitStopScale);
+    }
     if (this.paused) scale = 0;
 
     if (scale > 0) {
@@ -129,6 +134,8 @@ export class GameSession {
       this.simMs += (performance.now() - t0 - this.simMs) * 0.1;
       const events = b.drainEvents();
       if (events.length) {
+        for (const e of events)
+          if (e.t === 'explode' || (e.t === 'bossAttack' && (e.attackId === 'baton_slam' || e.attackId === 'taser_chain'))) this.hitStop = cfg.game.feel.hitStopSec;
         this.renderer.onEvents(b, events);
         this.hooks.onEvents(events);
       }

@@ -65,12 +65,15 @@ body { font-family: var(--font); color: #fff; user-select: none; -webkit-user-se
 .ico-rep { background: #ffc61a; } .ico-rep::after { content: '★'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; color: #6b4a00; }
 .ico-ice { background: #7fe7ff; border-radius: 4px; transform: rotate(45deg) scale(0.8); }
 .ico-shard { background: #9be7ff; border-radius: 3px; transform: rotate(45deg) scale(0.7); }
-.hud-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.hud-right { position: absolute; right: 10px; top: calc(10px + var(--safe-top)); display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.hud-btns { display: flex; gap: 6px; }
+.btn-sound { pointer-events: auto; width: 44px; height: 44px; border-radius: 12px; border: 3px solid #fff; background: rgba(15, 18, 26, 0.7) center / 22px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z'/%3E%3C/svg%3E"); }
+.btn-sound.off { opacity: 0.45; }
 .btn-pause { pointer-events: auto; width: 44px; height: 44px; border-radius: 12px; border: 3px solid #fff; background: rgba(15, 18, 26, 0.7); color: #fff; font: 18px var(--font); letter-spacing: -2px; }
-.weapon-chip { display: flex; gap: 6px; align-items: center; padding: 3px 9px; border-radius: 10px; background: rgba(15, 18, 26, 0.78); border: 2px solid var(--rar, #3ee26b); font-size: 13px; max-width: 190px; white-space: nowrap; }
+.weapon-chip { display: flex; gap: 6px; align-items: center; padding: 3px 9px; border-radius: 10px; background: rgba(15, 18, 26, 0.78); border: 2px solid var(--rar, #3ee26b); font-size: 13px; max-width: 150px; white-space: nowrap; }
 .weapon-chip .wname { overflow: hidden; text-overflow: ellipsis; }
 .weapon-chip .wlvl { color: var(--rar, #3ee26b); }
-.stage:not([data-screen='play']) .btn-pause, .stage:not([data-screen='play']) .weapon-chip { display: none; }
+.stage[data-screen='splash'] .btn-sound, .stage:not([data-screen='play']) .btn-pause, .stage:not([data-screen='play']) .weapon-chip { display: none; }
 .stage[data-screen='splash'] .hud { display: none; }
 .fps { position: absolute; left: 8px; bottom: calc(6px + var(--safe-bottom)); font: 11px ui-monospace, monospace; background: rgba(0, 0, 0, 0.6); padding: 2px 6px; border-radius: 4px; }
 

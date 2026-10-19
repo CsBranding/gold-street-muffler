@@ -117,6 +117,20 @@ characters (above). Downed units now play a knockdown and sink away (no gore),
 the crew switches between run / shooting stance / cheer with the battle phase,
 and Big Sarge winds up, slams, raises his shield, roars on enrage and topples.
 
+### Gameplay feel pass ✅
+- **Audio (all synthesized, no files):** per-weapon-class gunshots (squad fire
+  voice-limited, leader always heard), gate dings up/down, recruit blips, wood
+  breaks, explosions, boss slam boom, taser zap, sirens for backup/enrage,
+  loot sparkles by rarity, banner whooshes, win/fail stingers, and a
+  boom-bap beat whose fight layer kicks in during holds and boss fights.
+  Sound toggle in the HUD (saved).
+- **Recruits leap** out of the gate or barrel that produced them, cheering,
+  and run into formation.
+- **Vehicles you can see:** the leader rides a hopping lowrider or a leaning
+  dirt bike; the crew makes room around it.
+- **Impacts:** physical debris from barrels/crates/cruisers, shockwave rings on
+  slams, explosions and gates, and a short hit-stop on big hits.
+
 ### Next: Phase 2
 Faction / Character / Battle Mode / Map select screens, the Blue faction, VS Rival
 (mini-boss Big Homie at L5 and Big Sarge at L10) and All-Out three-way infighting,

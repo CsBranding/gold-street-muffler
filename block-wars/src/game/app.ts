@@ -6,6 +6,7 @@
 import type { GameConfig, LevelDef, MapDef } from '../schema/types';
 import { BattleRenderer, rewardText } from '../render/BattleRenderer';
 import { MockAdService, type AdService } from '../services/ads';
+import { AudioService } from '../services/audio';
 import { Haptics } from '../services/haptics';
 import { SaveService } from '../services/save';
 import type { SimEvent } from '../sim/battle';
@@ -28,6 +29,7 @@ export class App {
   private save: SaveService;
   private ads: AdService;
   private haptics = new Haptics();
+  private audio: AudioService;
   private session: GameSession | null = null;
   private screen: Screen = 'splash';
   private last = performance.now();
@@ -52,6 +54,12 @@ export class App {
     this.screenEl.className = 'screen';
     this.stage.appendChild(this.screenEl);
     this.save = new SaveService(cfg);
+    this.audio = new AudioService(cfg.game.audio);
+    // audio can only start from a user gesture
+    this.stage.addEventListener('pointerdown', () => {
+      this.audio.unlock();
+      this.audio.startMusic();
+    });
     this.ads = new MockAdService(cfg.economy.ads, this.stage);
     if (new URLSearchParams(location.search).has('fps')) {
       this.fps.el = document.createElement('div');
@@ -65,6 +73,7 @@ export class App {
   async start(): Promise<void> {
     await this.save.load();
     this.haptics.enabled = this.save.data.settings.haptics;
+    this.audio.setEnabled(this.save.data.settings.sound);
     const q = new URLSearchParams(location.search).get('q');
     this.perf.forced = q !== null;
     this.renderer.setQuality(q !== null ? Number(q) : (this.save.data.settings.quality ?? 3));
@@ -97,6 +106,8 @@ export class App {
     const dt = Math.min(0.1, (t - this.last) / 1000);
     this.last = t;
     if (this.session) this.session.frame(dt);
+    const b = this.session?.battle;
+    this.audio.setIntensity(b && (b.phase === 'hold' || b.phase === 'push' || b.phase === 'boss') ? 1 : 0);
     if (this.screen === 'play') {
       this.updateHud();
       this.adaptQuality(dt);
@@ -149,11 +160,23 @@ export class App {
         </div>
       </div>
       <div class="hud-right">
-        <button class="btn-pause" aria-label="Pause">II</button>
+        <div class="hud-btns">
+          <button class="btn-sound" aria-label="Sound"></button>
+          <button class="btn-pause" aria-label="Pause">II</button>
+        </div>
         <div class="weapon-chip"><span class="wname"></span><span class="wlvl"></span></div>
       </div>`;
     drawPortrait(this.hud.querySelector('canvas')!, this.leaderChar(), this.faction().colors.accent);
     this.hud.querySelector('.btn-pause')!.addEventListener('click', () => this.pause());
+    const snd = this.hud.querySelector<HTMLButtonElement>('.btn-sound')!;
+    const paint = () => snd.classList.toggle('off', !this.save.data.settings.sound);
+    paint();
+    snd.addEventListener('click', () => {
+      this.save.data.settings.sound = !this.save.data.settings.sound;
+      this.audio.setEnabled(this.save.data.settings.sound);
+      paint();
+      void this.save.save();
+    });
     this.refreshCurrencies();
   }
 
@@ -276,7 +299,31 @@ export class App {
 
   private onEvents(events: SimEvent[]): void {
     const text = this.cfg.game.banners.text;
+    const a = this.audio;
     for (const e of events) {
+      switch (e.t) {
+        case 'shot': a.shot(e.cls, e.leader); break;
+        case 'hit': a.hit(e.blocked); break;
+        case 'kill': a.kill(); break;
+        case 'gate': a.gate(!e.negative); break;
+        case 'recruits': a.recruit(); break;
+        case 'obstacleDestroyed': a.woodBreak(); break;
+        case 'explode': a.explosion(); break;
+        case 'reward': a.reward(e.rarity); break;
+        case 'banner': a.whoosh(); break;
+        case 'bossAttack':
+          if (e.attackId === 'baton_slam') a.slam();
+          if (e.attackId === 'taser_chain') a.zap();
+          break;
+        case 'telegraph':
+          if (e.attackId === 'call_backup' || e.attackId === 'summon_runners') a.siren();
+          break;
+        case 'bossEnrage': a.siren(); break;
+        case 'bossDefeated': a.explosion(true); break;
+        case 'won': a.win(); break;
+        case 'failed': a.fail(); break;
+        default: break;
+      }
       if (e.t === 'banner') this.overlay.banner(text[e.key], this.cfg.game.banners.durationSec, e.key);
       if (e.t === 'reward' && e.reward.kind === 'weapon') this.overlay.banner(rewardText(this.cfg, e.reward), 1.2, 'reward');
       if (e.t === 'bossDefeated' || e.t === 'explode') this.haptics.heavy();

@@ -692,6 +692,82 @@
       ],
       "additionalProperties": false
     },
+    "audio": {
+      "type": "object",
+      "properties": {
+        "master": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sfx": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "music": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "bpm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maxShotVoicesPerSec": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "master",
+        "sfx",
+        "music",
+        "bpm",
+        "maxShotVoicesPerSec"
+      ],
+      "additionalProperties": false
+    },
+    "feel": {
+      "type": "object",
+      "properties": {
+        "hitStopSec": {
+          "type": "number",
+          "minimum": 0
+        },
+        "hitStopScale": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "recruitLeapSec": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "recruitLeapHeight": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxDebris": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "debrisLife": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "hitStopSec",
+        "hitStopScale",
+        "recruitLeapSec",
+        "recruitLeapHeight",
+        "maxDebris",
+        "debrisLife"
+      ],
+      "additionalProperties": false
+    },
     "flow": {
       "type": "object",
       "properties": {
@@ -727,6 +803,8 @@
     "gateColors",
     "banners",
     "runCap",
+    "audio",
+    "feel",
     "flow"
   ],
   "additionalProperties": false
