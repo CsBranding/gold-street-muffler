@@ -73,7 +73,7 @@
   },
   "boss": {
     "arenaLength": 46,
-    "slowMoSec": 1.6,
+    "slowMoSec": 0.6,
     "slowMoScale": 0.25
   },
   "camera": {
@@ -127,5 +127,9 @@
   },
   "runCap": {
     "maxLevelSec": 120
+  },
+  "flow": {
+    "winDelaySec": 1.2,
+    "failDelaySec": 0.9
   }
 }

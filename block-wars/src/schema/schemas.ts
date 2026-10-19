@@ -488,6 +488,8 @@ export const GameFileSchema = z.object({
     }),
   }),
   runCap: z.object({ maxLevelSec: pos }),
+  /** real-time delays before result/fail screens appear */
+  flow: z.object({ winDelaySec: nonNeg, failDelaySec: nonNeg }),
 });
 
 // ---------------------------------------------------------- asset manifest
