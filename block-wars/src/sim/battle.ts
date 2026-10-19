@@ -43,9 +43,16 @@ export interface BattleStats {
   gatesHit: number;
   timeSec: number;
   obstaclesDestroyed: number;
+  recruits: number;
 }
 
 const DEG = Math.PI / 180;
+
+/** sustained single-unit DPS estimate used to rank guns */
+export function weaponPower(w: Weapon): number {
+  const magTime = w.mag / w.ratePerSec;
+  return w.damage * w.pellets * w.ratePerSec * (magTime / (magTime + w.reloadSec)) * (1 + w.pierce * 0.5) * (1 + w.critBonus);
+}
 const K_OBSTACLE = 0;
 const K_ENEMY = 1;
 const K_BOSS = 2;
@@ -63,7 +70,7 @@ export class Battle {
   phase: Phase = 'run';
   time = 0;
   events: SimEvent[] = [];
-  stats: BattleStats = { kills: 0, cash: 0, shards: {}, revives: 0, peakCrew: 0, gatesHit: 0, timeSec: 0, obstaclesDestroyed: 0 };
+  stats: BattleStats = { kills: 0, cash: 0, shards: {}, revives: 0, peakCrew: 0, gatesHit: 0, timeSec: 0, obstaclesDestroyed: 0, recruits: 0 };
 
   crowd = { x: 0, z: 0, prevZ: 0, targetX: 0, followers: 0, leaderHp: 0, leaderMaxHp: 0, damagePool: 0, invuln: 0, steerSlow: 1 };
   ext: CrowdExtents;
@@ -104,7 +111,7 @@ export class Battle {
     this.level = compileLevel(cfg, map, levelDef, loadout.mode);
     this.enemyDefs = this.level.enemyDefs;
     this.weapons = new Map(cfg.weapons.weapons.map((w) => [w.id, w]));
-    this.squad.weapon = this.weapons.get(cfg.game.crowd.squadStartWeaponId)!;
+    this.squad.weapon = this.weapons.get(loadout.squadWeaponId)!;
     this.leader.weapon = this.weapons.get(loadout.leaderWeaponId)!;
     this.leader.ammo = this.leader.weapon.mag;
     this.crowd.followers = Math.min(cfg.game.crowd.maxCrew - 1, Math.max(0, Math.round(loadout.startCrew)));
@@ -355,7 +362,10 @@ export class Battle {
     const before = this.crowd.followers;
     this.crowd.followers = Math.max(0, Math.min(max, Math.round(count) - 1));
     const gained = this.crowd.followers - before;
-    if (gained > 0) this.events.push({ t: 'recruits', n: gained });
+    if (gained > 0) {
+      this.stats.recruits += gained;
+      this.events.push({ t: 'recruits', n: gained });
+    }
     else if (gained < 0) this.events.push({ t: 'crewLost', n: -gained, cause: 'fire' });
     this.ext = this.extents();
   }
@@ -384,10 +394,15 @@ export class Battle {
     const g = this.cfg.game;
     const loot = this.loadout.lootMult;
     switch (r.kind) {
-      case 'weapon':
-        this.squad.weapon = this.weapons.get(r.weaponId)!;
-        this.squad.acc = 0;
+      case 'weapon': {
+        // never downgrade: a weaker gun than the one in hand becomes a level-up instead
+        const next = this.weapons.get(r.weaponId)!;
+        if (weaponPower(next) > weaponPower(this.squad.weapon)) {
+          this.squad.weapon = next;
+          this.squad.acc = 0;
+        } else this.squad.level = Math.min(5, this.squad.level + 1);
         break;
+      }
       case 'weapon_level':
         this.squad.level = Math.min(5, this.squad.level + r.levels);
         break;
@@ -398,10 +413,10 @@ export class Battle {
         this.stats.shards[r.leaderId] = (this.stats.shards[r.leaderId] ?? 0) + r.count;
         break;
       case 'vehicle':
-        if (r.vehicle === 'lowrider') this.buffs.lowrider = g.pickups.lowrider.durationSec;
+        if (r.vehicle === 'lowrider') this.buffs.lowrider = g.pickups.lowrider.durationSec * this.loadout.vehicleDurationMult;
         else {
-          this.buffs.dirtBike = g.pickups.dirtBike.durationSec;
-          if (g.pickups.dirtBike.invulnerable) this.crowd.invuln = Math.max(this.crowd.invuln, g.pickups.dirtBike.durationSec);
+          this.buffs.dirtBike = g.pickups.dirtBike.durationSec * this.loadout.vehicleDurationMult;
+          if (g.pickups.dirtBike.invulnerable) this.crowd.invuln = Math.max(this.crowd.invuln, this.buffs.dirtBike);
         }
         break;
       case 'drum_mag':

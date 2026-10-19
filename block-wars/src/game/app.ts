@@ -15,6 +15,8 @@ import type { SimEvent } from '../sim/battle';
 import { buildLoadout } from '../sim/loadout';
 import { Overlay } from '../ui/overlay';
 import { drawPortrait } from '../ui/portrait';
+import * as meta from './meta';
+import { MetaScreens } from './metaScreens';
 import { computeResult, type LevelResult } from './results';
 import { GameSession } from './session';
 
@@ -34,6 +36,7 @@ export class App {
   private audio: AudioService;
   private session: GameSession | null = null;
   private preview: CharacterPreview | null = null;
+  private metaUi!: MetaScreens;
   private screen: Screen = 'splash';
   private last = performance.now();
   private result: LevelResult | null = null;
@@ -64,6 +67,24 @@ export class App {
       this.audio.startMusic();
     });
     this.ads = new MockAdService(cfg.economy.ads, this.stage);
+    this.metaUi = new MetaScreens({
+      cfg,
+      save: this.save,
+      ads: this.ads,
+      screenEl: this.screenEl,
+      setScreen: (html) => this.setScreen('hub', html),
+      refreshCurrencies: () => this.refreshCurrencies(),
+      showHub: () => this.showHub(),
+      onLeaderChanged: () => {
+        this.buildHud();
+        this.startAttract();
+      },
+    });
+    // keep "last seen" fresh for offline income
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') this.touchLastSeen();
+    });
+    window.setInterval(() => this.touchLastSeen(), 30000);
     if (new URLSearchParams(location.search).has('fps')) {
       this.fps.el = document.createElement('div');
       this.fps.el.className = 'fps';
@@ -96,8 +117,62 @@ export class App {
       const map = this.cfg.levels.maps.find((m) => m.id === (params.get('map') ?? this.save.data.selection.mapId))!;
       const level = map.levels.find((l) => l.number === Number(direct));
       if (level) this.play(map, level, params.has('auto'), Number(params.get('skip') ?? 0), params.has('seed') ? Number(params.get('seed')) : undefined);
-    } else this.showSplash();
+    } else {
+      this.showSplash();
+      this.welcomeBack();
+    }
     requestAnimationFrame((t) => this.loop(t));
+  }
+
+  private touchLastSeen(): void {
+    this.save.data.lastSeen = Date.now();
+    void this.save.save();
+  }
+
+  /** Launch rewards: offline income (2x via ad), login streak, rank Ice. Queued as popups. */
+  private welcomeBack(): void {
+    const now = Date.now();
+    const d = this.save.data;
+    const queue: (() => void)[] = [];
+    const next = () => queue.shift()?.();
+    const off = meta.offlineIncome(this.cfg, d, now);
+    if (off.amount > 0)
+      queue.push(() =>
+        this.metaUi.modal(
+          `<h2>WELCOME BACK</h2><p>Your Corner Store made money while you were gone (${off.hours.toFixed(1)}h).</p><div class="loots"><div class="loot"><i class="ico ico-cash big"></i><b>$${formatNum(off.amount)}</b></div></div>`,
+          'COLLECT',
+          next,
+          {
+            label: '2X CASH',
+            onClick: async (close) => {
+              if (await this.ads.showRewarded('double_offline')) {
+                d.currencies.cash += off.amount;
+                close();
+              }
+            },
+          },
+        ),
+      );
+    if (off.amount > 0) d.currencies.cash += off.amount;
+    const login = meta.checkLogin(this.cfg, d, now);
+    if (login) {
+      d.currencies.cash += login.cash;
+      // brand-new players go straight to picking a side; popups start from the second launch
+      if (d.selection.onboarded) queue.push(() => this.metaUi.modal(`<h2>DAY ${login.day} STREAK</h2><p>Come back tomorrow for a bigger bag.</p><div class="loots"><div class="loot"><i class="ico ico-cash big"></i><b>$${formatNum(login.cash)}</b></div></div>`, 'NICE', next));
+    }
+    meta.ensureMissions(this.cfg, d, now);
+    d.lastSeen = now;
+    void this.save.save();
+    this.refreshCurrencies();
+    next();
+  }
+
+  private toast(text: string): void {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = text;
+    this.stage.appendChild(el);
+    setTimeout(() => el.remove(), 2600);
   }
 
   /** Portrait 9:16 stage, letterboxed on desktop, full-bleed on phones. */
@@ -166,6 +241,7 @@ export class App {
     this.hud.innerHTML = `
       <div class="hud-left">
         <canvas class="portrait" width="112" height="112"></canvas>
+        <span class="rank" title="Rank"></span>
         <div class="pills">
           ${cur.map((c) => `<div class="pill" data-cur="${c.id}" style="--pill:${c.color}"><i class="ico ico-${c.id}"></i><span>0</span></div>`).join('')}
         </div>
@@ -215,6 +291,8 @@ export class App {
 
   private refreshCurrencies(): void {
     const c = this.save.data.currencies;
+    const rank = this.hud.querySelector('.rank');
+    if (rank) rank.textContent = `R${meta.rankOf(this.cfg, c.rep).rank}`;
     for (const el of this.hud.querySelectorAll<HTMLDivElement>('.pill')) {
       const v = c[el.dataset.cur as keyof typeof c];
       el.querySelector('span')!.textContent = formatNum(v);
@@ -300,6 +378,7 @@ export class App {
           <h2>${esc(map.displayName.toUpperCase())}</h2>
         </div>
         <div class="path">${nodes.join('')}</div>
+        ${'' /* map strip */}
         <div class="maps">
           ${maps
             .map((m) => {
@@ -308,7 +387,9 @@ export class App {
             })
             .join('')}
         </div>
+        ${this.metaUi.nav('play')}
       </div>`);
+    this.metaUi.bindNav();
     for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('[data-level]'))
       el.addEventListener('click', () => this.play(map, authored.get(Number(el.dataset.level))!));
     for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('[data-map]'))
@@ -368,7 +449,7 @@ export class App {
   }
 
   private charUnlocked(c: Character): boolean {
-    return c.unlock.kind === 'default' || (this.save.data.shards[c.id] ?? 0) >= c.unlock.shards;
+    return meta.isUnlocked(this.save.data, c);
   }
 
   private perkText(c: Character): string {
@@ -408,8 +489,10 @@ export class App {
       this.screenEl.querySelector('.cperk')!.textContent = this.perkText(cur);
       this.screenEl.querySelector('.cbio')!.textContent = cur.bio;
       const pick = this.screenEl.querySelector<HTMLButtonElement>('[data-act="pick"]')!;
-      pick.disabled = !unlocked;
-      pick.textContent = unlocked ? 'SELECT' : `LOCKED · ${this.save.data.shards[cur.id] ?? 0}/${cur.unlock.kind === 'shards' ? cur.unlock.shards : 0} SHARDS`;
+      const have = this.save.data.shards[cur.id] ?? 0;
+      const need = cur.unlock.kind === 'shards' ? cur.unlock.shards : 0;
+      pick.disabled = !unlocked && have < need;
+      pick.textContent = unlocked ? `SELECT · LV ${meta.leaderLevel(this.save.data, cur)}` : have >= need ? `UNLOCK · ${need} SHARDS` : `LOCKED · ${have}/${need} SHARDS`;
       this.screenEl.querySelector('.custom')!.classList.toggle('off', !unlocked || cur.id !== sel.leaderId);
       for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('.rost')) {
         const c = chars.find((x) => x.id === el.dataset.c)!;
@@ -441,6 +524,15 @@ export class App {
         paint();
       });
     this.screenEl.querySelector('[data-act="pick"]')!.addEventListener('click', () => {
+      if (!this.charUnlocked(cur)) {
+        if (meta.unlockLeader(this.save.data, cur)) {
+          sel.leaderId = cur.id;
+          sel.custom = {};
+          void this.save.save();
+        }
+        paint();
+        return;
+      }
       sel.leaderId = cur.id;
       void this.save.save();
       this.buildHud();
@@ -477,7 +569,10 @@ export class App {
     this.session?.dispose();
     this.current = { map, level };
     const sel = this.save.data.selection;
-    const loadout = buildLoadout(this.cfg, this.leaderChar(), sel.mode, this.save.data.upgrades);
+    const loadout = buildLoadout(this.cfg, this.leaderChar(), sel.mode, meta.upgradeLevels(this.save.data), {
+      leaderLevel: meta.leaderLevel(this.save.data, this.leaderChar()),
+      base: this.save.data.base,
+    });
     loadout.cosmetic = { ...sel.custom };
     this.setScreen('play', '');
     this.lastWeapon = '';
@@ -635,10 +730,28 @@ export class App {
     for (const [id, n] of Object.entries(r.shards)) d.shards[id] = (d.shards[id] ?? 0) + n;
     if (r.won) d.progress[mapId] = Math.max(d.progress[mapId] ?? 0, levelNumber);
     d.levelsPlayed++;
+    // daily missions
+    const b = this.session?.battle;
+    if (b) {
+      meta.ensureMissions(this.cfg, d, Date.now());
+      const done = meta.recordRun(this.cfg, d, { won: r.won, isBoss: b.levelDef.isBoss, stars: r.stars, cash: r.cash, stats: b.stats, recruits: b.stats.recruits });
+      for (const id of done) {
+        const def = this.cfg.economy.missions.find((m) => m.id === id)!;
+        this.toast(`MISSION DONE · ${def.text.replace('{t}', formatNum(def.target))}`);
+      }
+    }
+    const ranks = meta.claimRanks(this.cfg, d);
+    if (ranks) this.toast(`RANK UP · ${meta.rankOf(this.cfg, d.currencies.rep).rank} · +${ranks * this.cfg.economy.rank.iceReward} ICE`);
+    // chapter chest for the first clear of a map's final authored level
+    const map = this.cfg.levels.maps.find((m) => m.id === mapId)!;
+    const finalLevel = Math.max(...map.levels.map((l) => l.number));
+    const chapterChest = r.won && levelNumber === finalLevel && !d.chaptersCleared.includes(mapId);
+    if (chapterChest) d.chaptersCleared.push(mapId);
     await this.save.save();
     this.refreshCurrencies();
     if (this.ads.shouldShowInterstitial(d.levelsPlayed)) await this.ads.showInterstitial();
-    this.showHub();
+    if (chapterChest) this.metaUi.openChest('chapter', (Date.now() ^ levelNumber) & 0x7fffffff, () => this.showHub());
+    else this.showHub();
   }
 }
 

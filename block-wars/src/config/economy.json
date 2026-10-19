@@ -89,7 +89,16 @@
       80,
       160
     ],
-    "maxLeaderLevel": 6
+    "maxLeaderLevel": 6,
+    "cashPerLeaderLevel": [
+      300,
+      800,
+      2000,
+      5000,
+      12000
+    ],
+    "perkPerLevel": 0.25,
+    "leaderHpPerLevel": 25
   },
   "hoodBase": [
     {
@@ -99,7 +108,8 @@
       "baseCost": 500,
       "costGrowth": 1.6,
       "effect": "offline_income_per_hour",
-      "perLevel": 40
+      "perLevel": 40,
+      "blurb": "Earns cash while you are away"
     },
     {
       "id": "gym",
@@ -108,16 +118,18 @@
       "baseCost": 600,
       "costGrowth": 1.6,
       "effect": "crew_unit_hp_mult",
-      "perLevel": 0.06
+      "perLevel": 0.06,
+      "blurb": "Tougher crew members"
     },
     {
       "id": "armory",
       "displayName": "Armory",
-      "maxLevel": 10,
+      "maxLevel": 4,
       "baseCost": 800,
       "costGrowth": 1.7,
       "effect": "weapon_unlock_tier",
-      "perLevel": 1
+      "perLevel": 1,
+      "blurb": "Start runs with a better squad gun"
     },
     {
       "id": "garage",
@@ -126,12 +138,14 @@
       "baseCost": 700,
       "costGrowth": 1.65,
       "effect": "vehicle_duration_mult",
-      "perLevel": 0.08
+      "perLevel": 0.08,
+      "blurb": "Rides last longer"
     }
   ],
   "offlineIncome": {
     "basePerHour": 30,
-    "capHours": 8
+    "capHours": 8,
+    "minMinutes": 5
   },
   "ads": {
     "interstitialFreeLevels": 5,
@@ -199,5 +213,105 @@
       1000
     ],
     "missionsPerDay": 3
+  },
+  "rank": {
+    "repBase": 60,
+    "repGrowth": 1.35,
+    "iceReward": 10
+  },
+  "armoryWeapons": [
+    "pistol_9",
+    "auto_pistol",
+    "micro_smg",
+    "ar_pistol",
+    "draco"
+  ],
+  "missions": [
+    {
+      "id": "kills_300",
+      "text": "Knock down {t} enemies",
+      "stat": "kills",
+      "target": 300,
+      "cash": 400,
+      "ice": 0
+    },
+    {
+      "id": "kills_1000",
+      "text": "Knock down {t} enemies",
+      "stat": "kills",
+      "target": 1000,
+      "cash": 900,
+      "ice": 5
+    },
+    {
+      "id": "gates_15",
+      "text": "Run through {t} gates",
+      "stat": "gates",
+      "target": 15,
+      "cash": 300,
+      "ice": 0
+    },
+    {
+      "id": "levels_3",
+      "text": "Clear {t} levels",
+      "stat": "levels",
+      "target": 3,
+      "cash": 500,
+      "ice": 5
+    },
+    {
+      "id": "boss_1",
+      "text": "Beat {t} boss",
+      "stat": "bosses",
+      "target": 1,
+      "cash": 800,
+      "ice": 10
+    },
+    {
+      "id": "recruits_150",
+      "text": "Recruit {t} crew",
+      "stat": "recruits",
+      "target": 150,
+      "cash": 350,
+      "ice": 0
+    },
+    {
+      "id": "cash_2000",
+      "text": "Earn ${t} in runs",
+      "stat": "cash",
+      "target": 2000,
+      "cash": 500,
+      "ice": 0
+    },
+    {
+      "id": "obstacles_20",
+      "text": "Smash {t} obstacles",
+      "stat": "obstacles",
+      "target": 20,
+      "cash": 350,
+      "ice": 0
+    },
+    {
+      "id": "stars_6",
+      "text": "Earn {t} stars",
+      "stat": "stars",
+      "target": 6,
+      "cash": 600,
+      "ice": 5
+    }
+  ],
+  "chests": {
+    "chapter": {
+      "cash": 1500,
+      "ice": 30,
+      "shards": 12,
+      "leaders": 2
+    },
+    "daily": {
+      "cash": 300,
+      "ice": 5,
+      "shards": 4,
+      "leaders": 1
+    }
   }
 }

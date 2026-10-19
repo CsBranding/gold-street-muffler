@@ -374,11 +374,39 @@ export const EconomyFileSchema = z.object({
     stars: z.array(frac).length(3),
   }),
   upgrades: z.array(UpgradeSchema),
-  roster: z.object({ shardsPerLeaderLevel: z.array(z.number().int().positive()), maxLeaderLevel: z.number().int().positive() }),
+  roster: z.object({
+    /** shards needed to go from level i+1 to i+2 */
+    shardsPerLeaderLevel: z.array(z.number().int().positive()),
+    /** cash cost alongside the shards, same indexing */
+    cashPerLeaderLevel: z.array(nonNeg),
+    maxLeaderLevel: z.number().int().positive(),
+    /** perk value grows by this fraction per leader level above 1 */
+    perkPerLevel: nonNeg,
+    leaderHpPerLevel: nonNeg,
+  }),
+  /** Rep is XP: ranks grant Ice */
+  rank: z.object({ repBase: pos, repGrowth: pos, iceReward: nonNeg }),
+  /** Armory level N unlocks armoryWeapons[N] as the squad's starting gun */
+  armoryWeapons: z.array(id).min(1),
+  missions: z.array(
+    z.object({
+      id,
+      text: z.string(),
+      stat: z.enum(['kills', 'gates', 'levels', 'bosses', 'recruits', 'cash', 'obstacles', 'stars']),
+      target: pos,
+      cash: nonNeg,
+      ice: nonNeg,
+    }),
+  ),
+  chests: z.object({
+    chapter: z.object({ cash: nonNeg, ice: nonNeg, shards: z.number().int().min(0), leaders: z.number().int().min(1) }),
+    daily: z.object({ cash: nonNeg, ice: nonNeg, shards: z.number().int().min(0), leaders: z.number().int().min(1) }),
+  }),
   hoodBase: z.array(
     z.object({
       id: z.enum(['corner_store', 'gym', 'armory', 'garage']),
       displayName: z.string(),
+      blurb: z.string(),
       maxLevel: z.number().int().positive(),
       baseCost: pos,
       costGrowth: pos,
@@ -386,7 +414,7 @@ export const EconomyFileSchema = z.object({
       perLevel: z.number(),
     }),
   ),
-  offlineIncome: z.object({ basePerHour: nonNeg, capHours: pos }),
+  offlineIncome: z.object({ basePerHour: nonNeg, capHours: pos, minMinutes: nonNeg }),
   ads: z.object({
     interstitialFreeLevels: z.number().int().min(0),
     interstitialEveryNLevels: z.number().int().positive(),

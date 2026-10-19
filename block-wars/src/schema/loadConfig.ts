@@ -70,6 +70,10 @@ export function parseConfig(raw: Record<keyof GameConfig, unknown>): GameConfig 
   const ab = cfg.levels.autoBoss;
   if (!bossIds.has(ab.finalBossId)) errors.push(`levels.autoBoss.finalBossId ${ab.finalBossId} unknown`);
   if (!bossIds.has(ab.rivalMiniBossId)) errors.push(`levels.autoBoss.rivalMiniBossId ${ab.rivalMiniBossId} unknown`);
+  for (const w of cfg.economy.armoryWeapons) if (!weaponIds.has(w)) errors.push(`economy.armoryWeapons: unknown weapon ${w}`);
+  if (cfg.economy.armoryWeapons[0] !== cfg.game.crowd.squadStartWeaponId) errors.push('economy.armoryWeapons[0] must be the squad start weapon');
+  const armory = cfg.economy.hoodBase.find((b) => b.id === 'armory');
+  if (armory && armory.maxLevel > cfg.economy.armoryWeapons.length - 1) errors.push('armory maxLevel exceeds armoryWeapons');
   for (const b of cfg.bosses.bosses)
     for (const a of b.attacks)
       for (const s of a.spawn) if (!enemyIds.has(s.enemyId)) errors.push(`boss ${b.id} spawns unknown ${s.enemyId}`);

@@ -27,6 +27,20 @@ export interface SaveData {
     onboarded: boolean;
   };
   levelsPlayed: number;
+  /** leader id -> level (0/missing = locked unless default) */
+  leaderLevels: Record<string, number>;
+  /** Hood Base building levels */
+  base: Record<string, number>;
+  /** last time the app was open (offline income) */
+  lastSeen: number;
+  login: { lastDay: string; streak: number };
+  missions: { day: string; list: { id: string; progress: number; claimed: boolean }[] };
+  /** maps whose chapter chest has been earned */
+  chaptersCleared: string[];
+  /** unopened chest queue */
+  chests: { kind: 'chapter' | 'daily'; seed: number }[];
+  dailyChestDay: string;
+  rankClaimed: number;
   settings: { haptics: boolean; sound: boolean; quality?: number };
 }
 
@@ -66,6 +80,15 @@ export function defaultSave(cfg: GameConfig): SaveData {
     upgrades: {},
     selection: { factionId: red.id, leaderId: red.defaultLeaderId, mode: 'vs_cops', mapId: cfg.levels.maps[0].id, custom: {}, onboarded: false },
     levelsPlayed: 0,
+    leaderLevels: {},
+    base: {},
+    lastSeen: 0,
+    login: { lastDay: '', streak: 0 },
+    missions: { day: '', list: [] },
+    chaptersCleared: [],
+    chests: [],
+    dailyChestDay: '',
+    rankClaimed: 1,
     settings: { haptics: true, sound: true },
   };
 }

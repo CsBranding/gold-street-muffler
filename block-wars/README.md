@@ -168,7 +168,33 @@ switching sides.
 4 and 6-9 are "coming soon"; hair/face-tattoo options are in config but only
 skin tone and headwear render yet.
 
-### Next: Phase 3
-Currencies spent on upgrades (starting crew, damage, fire rate, leader HP,
-loot, offline income), roster leveling with shards, Hood Base (Corner Store,
-Gym, Armory, Garage), daily missions, login streak, chapter chests.
+### Phase 3: meta progression ✅
+Rules live in `src/game/meta.ts` (pure, unit-tested in `tests/meta.test.ts`);
+screens in `src/game/metaScreens.ts`. Bottom nav: UPGRADE · CREW · PLAY ·
+BASE · DAILY, with red dots when something is affordable or claimable.
+- **Currencies:** Cash (soft) buys upgrades, buildings and leader levels; Rep is
+  XP: ranks (R-badge on the portrait) pay Ice; Ice (premium) comes from
+  first clears, ranks, missions and chests.
+- **Upgrades:** starting crew, crew damage, fire rate, leader HP, loot bonus,
+  offline income; exponential costs from `economy.json`, applied to every run.
+- **Roster:** chests and legendary crates drop leader shards; unlocking spends
+  shards; leveling spends shards + cash and scales the leader's perk (+25%
+  per level) and HP.
+- **Hood Base:** Corner Store (offline cash per hour), Gym (crew toughness),
+  Armory (starting squad gun: Full-Auto Pistol → Micro SMG → AR Pistol →
+  Draco), Garage (longer rides). Weapon pickups never downgrade your gun:
+  a weaker one becomes a weapon level instead.
+- **Daily:** 7-day login streak, 3 daily missions per day (seeded by date, one
+  per stat), free daily chest behind a rewarded ad, chapter chest on a
+  map's first final-level clear. Offline income popup with 2X via ad.
+
+**Self-critique, fixed:** the HUD currencies were dimmed behind shop screens;
+new players got a streak popup before choosing a side; a reload during the
+first launch could overwrite an injected save (test harness now seeds via an
+init script); weapon pickups could downgrade an Armory starting gun.
+
+### Next: Phase 4
+Monetization wiring (real ad SDK behind `AdService`, IAP: Remove Ads, starter
+pack, Ice bundles, weapon skins; battle pass), Capacitor iOS/Android builds
+with Preferences-backed save and native haptics, tutorial, store assets, and
+an on-device performance pass.
