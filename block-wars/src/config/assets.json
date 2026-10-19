@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "assets": {
+    "crew_unit": {
+      "url": null,
+      "placeholder": "lowpoly_human",
+      "scale": 1
+    },
+    "leader": {
+      "url": null,
+      "placeholder": "lowpoly_human",
+      "scale": 1.35
+    },
+    "patrol_officer": {
+      "url": null,
+      "placeholder": "lowpoly_cop",
+      "scale": 1
+    },
+    "riot_cop": {
+      "url": null,
+      "placeholder": "lowpoly_cop_shield",
+      "scale": 1
+    },
+    "swat": {
+      "url": null,
+      "placeholder": "lowpoly_cop",
+      "scale": 1.1
+    },
+    "big_sarge": {
+      "url": null,
+      "placeholder": "lowpoly_boss_cop",
+      "scale": 6
+    },
+    "big_homie": {
+      "url": null,
+      "placeholder": "lowpoly_human",
+      "scale": 4
+    },
+    "barrel": {
+      "url": null,
+      "placeholder": "cylinder",
+      "scale": 1
+    },
+    "crate": {
+      "url": null,
+      "placeholder": "box",
+      "scale": 1
+    },
+    "dumpster": {
+      "url": null,
+      "placeholder": "box",
+      "scale": 1
+    },
+    "cruiser": {
+      "url": null,
+      "placeholder": "lowpoly_car",
+      "scale": 1
+    },
+    "barricade": {
+      "url": null,
+      "placeholder": "wood_barricade",
+      "scale": 1
+    },
+    "gate": {
+      "url": null,
+      "placeholder": "panel",
+      "scale": 1
+    }
+  }
+}

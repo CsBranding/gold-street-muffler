@@ -1,0 +1,1357 @@
+{
+ "version": 1,
+ "difficulty": {
+  "growthPerLevel": 0.12,
+  "mapStep": 0.35
+ },
+ "maps": [
+  {
+   "id": "freeway_bridge",
+   "displayName": "Freeway Bridge",
+   "unlockOrder": 0,
+   "theme": {
+    "sky": "#8fc7ff",
+    "fog": "#bfe0ff",
+    "fogNear": 40,
+    "fogFar": 140,
+    "ground": "#2c7fd0",
+    "road": "#5b5f66",
+    "roadLine": "#f2f2f2",
+    "edge": "water",
+    "edgeColor": "#2e86de",
+    "sun": "#fff2d6",
+    "sunIntensity": 2.4,
+    "ambient": "#bcd7ff",
+    "ambientIntensity": 1.1,
+    "props": [
+     "concrete_barrier",
+     "light_pole",
+     "sign_gantry"
+    ],
+    "night": false
+   },
+   "levels": [
+    {
+     "number": 1,
+     "name": "On-Ramp",
+     "isBoss": false,
+     "targetSec": 70,
+     "baseCash": 60,
+     "segments": [
+      {
+       "kind": "gap",
+       "length": 10
+      },
+      {
+       "kind": "lanes",
+       "length": 52,
+       "lanes": [
+        {
+         "barricadeHp": 3,
+         "items": [
+          {
+           "type": "gate",
+           "at": 8.0,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 11.2,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 14.4,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 17.6,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 20.8,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 24.0,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 27.200000000000003,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 30.400000000000002,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 33.6,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 36.8,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 40.0,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 43.2,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          }
+         ]
+        },
+        {
+         "barricadeHp": 8,
+         "items": [
+          {
+           "type": "gate",
+           "at": 10,
+           "gate": {
+            "op": "add",
+            "value": 5
+           }
+          },
+          {
+           "type": "obstacle",
+           "at": 22,
+           "kind": "barrel",
+           "hp": 40,
+           "rarity": "rare",
+           "reward": {
+            "kind": "weapon",
+            "weaponId": "auto_pistol"
+           }
+          },
+          {
+           "type": "gate",
+           "at": 36,
+           "gate": {
+            "op": "add",
+            "value": 5
+           }
+          }
+         ]
+        },
+        {
+         "barricadeHp": 3,
+         "items": [
+          {
+           "type": "gate",
+           "at": 10,
+           "gate": {
+            "op": "add",
+            "value": 3
+           }
+          },
+          {
+           "type": "gate",
+           "at": 24,
+           "gate": {
+            "op": "sub",
+            "value": 5
+           }
+          },
+          {
+           "type": "gate",
+           "at": 38,
+           "gate": {
+            "op": "mul",
+            "value": 2
+           }
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "gap",
+       "length": 8
+      },
+      {
+       "kind": "gates",
+       "length": 46,
+       "rows": [
+        {
+         "at": 0,
+         "gates": [
+          {
+           "op": "add",
+           "value": 10
+          },
+          {
+           "op": "mul",
+           "value": 2
+          }
+         ]
+        },
+        {
+         "at": 16,
+         "gates": [
+          {
+           "op": "sub",
+           "value": 5
+          },
+          {
+           "op": "add",
+           "value": 8
+          }
+         ]
+        },
+        {
+         "at": 32,
+         "gates": [
+          {
+           "op": "mul",
+           "value": 2
+          },
+          {
+           "op": "div",
+           "value": 2
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "obstacles",
+       "length": 34,
+       "items": [
+        {
+         "kind": "barrel",
+         "hp": 30,
+         "x": -0.55,
+         "at": 4,
+         "rarity": "common",
+         "reward": {
+          "kind": "recruits",
+          "count": 6
+         }
+        },
+        {
+         "kind": "barrel",
+         "hp": 50,
+         "x": 0.55,
+         "at": 4,
+         "rarity": "rare",
+         "reward": {
+          "kind": "weapon_level",
+          "levels": 1
+         }
+        },
+        {
+         "kind": "crate",
+         "hp": 70,
+         "x": 0,
+         "at": 20,
+         "rarity": "common",
+         "reward": {
+          "kind": "recruits",
+          "count": 10
+         }
+        }
+       ]
+      },
+      {
+       "kind": "horde",
+       "length": 40,
+       "side": "enemy",
+       "columns": 10,
+       "enemies": [
+        {
+         "enemyId": "patrol_officer",
+         "count": 45
+        }
+       ],
+       "pickups": []
+      },
+      {
+       "kind": "gap",
+       "length": 12
+      }
+     ]
+    },
+    {
+     "number": 2,
+     "name": "Toll Plaza",
+     "isBoss": false,
+     "targetSec": 80,
+     "baseCash": 70,
+     "segments": [
+      {
+       "kind": "gap",
+       "length": 10
+      },
+      {
+       "kind": "lanes",
+       "length": 56,
+       "lanes": [
+        {
+         "barricadeHp": 4,
+         "items": [
+          {
+           "type": "gate",
+           "at": 8.0,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 11.2,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 14.4,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 17.6,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 20.8,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 24.0,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 27.200000000000003,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 30.400000000000002,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 33.6,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 36.8,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 40.0,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 43.2,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 46.400000000000006,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 49.6,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          }
+         ]
+        },
+        {
+         "barricadeHp": 12,
+         "items": [
+          {
+           "type": "obstacle",
+           "at": 12,
+           "kind": "barrel",
+           "hp": 60,
+           "rarity": "rare",
+           "reward": {
+            "kind": "weapon",
+            "weaponId": "draco"
+           }
+          },
+          {
+           "type": "gate",
+           "at": 30,
+           "gate": {
+            "op": "add",
+            "value": 6
+           }
+          },
+          {
+           "type": "gate",
+           "at": 42,
+           "gate": {
+            "op": "mul",
+            "value": 2
+           }
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "gap",
+       "length": 6
+      },
+      {
+       "kind": "gates",
+       "length": 50,
+       "rows": [
+        {
+         "at": 0,
+         "gates": [
+          {
+           "op": "add",
+           "value": 12
+          },
+          {
+           "op": "sub",
+           "value": 6
+          },
+          {
+           "op": "mul",
+           "value": 2
+          }
+         ]
+        },
+        {
+         "at": 18,
+         "gates": [
+          {
+           "op": "mul",
+           "value": 3
+          },
+          {
+           "op": "div",
+           "value": 2
+          }
+         ]
+        },
+        {
+         "at": 34,
+         "gates": [
+          {
+           "op": "add",
+           "value": 15
+          },
+          {
+           "op": "sub",
+           "value": 10
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "horde",
+       "length": 36,
+       "side": "enemy",
+       "columns": 10,
+       "enemies": [
+        {
+         "enemyId": "patrol_officer",
+         "count": 40
+        },
+        {
+         "enemyId": "riot_cop",
+         "count": 10
+        }
+       ],
+       "pickups": [
+        {
+         "at": 10,
+         "x": 0.7,
+         "reward": {
+          "kind": "armor_vest"
+         },
+         "rarity": "rare"
+        }
+       ]
+      },
+      {
+       "kind": "obstacles",
+       "length": 34,
+       "items": [
+        {
+         "kind": "dumpster",
+         "hp": 90,
+         "x": -0.6,
+         "at": 4,
+         "rarity": "rare",
+         "reward": {
+          "kind": "recruits",
+          "count": 15
+         }
+        },
+        {
+         "kind": "barrel",
+         "hp": 60,
+         "x": 0.6,
+         "at": 4,
+         "rarity": "epic",
+         "reward": {
+          "kind": "drum_mag"
+         }
+        },
+        {
+         "kind": "barrel",
+         "hp": 50,
+         "x": 0,
+         "at": 20,
+         "rarity": "rare",
+         "reward": {
+          "kind": "vehicle",
+          "vehicle": "lowrider"
+         }
+        }
+       ]
+      },
+      {
+       "kind": "horde",
+       "length": 40,
+       "side": "enemy",
+       "columns": 11,
+       "enemies": [
+        {
+         "enemyId": "patrol_officer",
+         "count": 60
+        },
+        {
+         "enemyId": "riot_cop",
+         "count": 14
+        }
+       ],
+       "pickups": []
+      },
+      {
+       "kind": "gap",
+       "length": 12
+      }
+     ]
+    },
+    {
+     "number": 3,
+     "name": "Overpass",
+     "isBoss": false,
+     "targetSec": 90,
+     "baseCash": 80,
+     "segments": [
+      {
+       "kind": "gap",
+       "length": 10
+      },
+      {
+       "kind": "lanes",
+       "length": 56,
+       "lanes": [
+        {
+         "barricadeHp": 5,
+         "items": [
+          {
+           "type": "gate",
+           "at": 8,
+           "gate": {
+            "op": "add",
+            "value": 5
+           }
+          },
+          {
+           "type": "gate",
+           "at": 18,
+           "gate": {
+            "op": "add",
+            "value": 5
+           }
+          },
+          {
+           "type": "gate",
+           "at": 28,
+           "gate": {
+            "op": "sub",
+            "value": 10
+           }
+          },
+          {
+           "type": "gate",
+           "at": 40,
+           "gate": {
+            "op": "mul",
+            "value": 3
+           }
+          }
+         ]
+        },
+        {
+         "barricadeHp": 16,
+         "items": [
+          {
+           "type": "obstacle",
+           "at": 10,
+           "kind": "crate",
+           "hp": 80,
+           "rarity": "epic",
+           "reward": {
+            "kind": "weapon",
+            "weaponId": "draco"
+           }
+          },
+          {
+           "type": "gate",
+           "at": 30,
+           "gate": {
+            "op": "add",
+            "value": 8
+           }
+          },
+          {
+           "type": "gate",
+           "at": 42,
+           "gate": {
+            "op": "add",
+            "value": 8
+           }
+          }
+         ]
+        },
+        {
+         "barricadeHp": 5,
+         "items": [
+          {
+           "type": "gate",
+           "at": 8.0,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 11.2,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 14.4,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 17.6,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 20.8,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 24.0,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 27.200000000000003,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 30.400000000000002,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 33.6,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 36.8,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 40.0,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 43.2,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 46.400000000000006,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 49.6,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "gap",
+       "length": 6
+      },
+      {
+       "kind": "gates",
+       "length": 36,
+       "rows": [
+        {
+         "at": 0,
+         "gates": [
+          {
+           "op": "mul",
+           "value": 2
+          },
+          {
+           "op": "add",
+           "value": 20
+          }
+         ]
+        },
+        {
+         "at": 18,
+         "gates": [
+          {
+           "op": "sub",
+           "value": 15
+          },
+          {
+           "op": "mul",
+           "value": 2
+          },
+          {
+           "op": "add",
+           "value": 10
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "horde",
+       "length": 38,
+       "side": "enemy",
+       "columns": 11,
+       "enemies": [
+        {
+         "enemyId": "riot_cop",
+         "count": 22
+        },
+        {
+         "enemyId": "patrol_officer",
+         "count": 55
+        }
+       ],
+       "pickups": []
+      },
+      {
+       "kind": "obstacles",
+       "length": 38,
+       "items": [
+        {
+         "kind": "cruiser",
+         "hp": 140,
+         "x": -0.6,
+         "at": 4,
+         "rarity": "epic",
+         "reward": {
+          "kind": "vehicle",
+          "vehicle": "dirt_bike"
+         }
+        },
+        {
+         "kind": "barrel",
+         "hp": 70,
+         "x": 0.6,
+         "at": 4,
+         "rarity": "rare",
+         "reward": {
+          "kind": "recruits",
+          "count": 20
+         }
+        },
+        {
+         "kind": "crate",
+         "hp": 90,
+         "x": 0,
+         "at": 22,
+         "rarity": "legendary",
+         "reward": {
+          "kind": "leader_shard",
+          "leaderId": "red_big_ru",
+          "count": 2
+         }
+        }
+       ]
+      },
+      {
+       "kind": "gates",
+       "length": 20,
+       "rows": [
+        {
+         "at": 0,
+         "gates": [
+          {
+           "op": "add",
+           "value": 10
+          },
+          {
+           "op": "mul",
+           "value": 2
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "horde",
+       "length": 40,
+       "side": "enemy",
+       "columns": 12,
+       "enemies": [
+        {
+         "enemyId": "patrol_officer",
+         "count": 80
+        },
+        {
+         "enemyId": "riot_cop",
+         "count": 20
+        }
+       ],
+       "pickups": []
+      },
+      {
+       "kind": "gap",
+       "length": 12
+      }
+     ]
+    },
+    {
+     "number": 10,
+     "name": "Big Sarge's Checkpoint",
+     "isBoss": true,
+     "targetSec": 110,
+     "baseCash": 200,
+     "segments": [
+      {
+       "kind": "gap",
+       "length": 10
+      },
+      {
+       "kind": "lanes",
+       "length": 52,
+       "lanes": [
+        {
+         "barricadeHp": 5,
+         "items": [
+          {
+           "type": "gate",
+           "at": 8.0,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 11.4,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 14.8,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 18.2,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 21.6,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 25.0,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 28.4,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 31.8,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 35.2,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 38.599999999999994,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 42.0,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 45.4,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
+          }
+         ]
+        },
+        {
+         "barricadeHp": 14,
+         "items": [
+          {
+           "type": "obstacle",
+           "at": 10,
+           "kind": "barrel",
+           "hp": 70,
+           "rarity": "epic",
+           "reward": {
+            "kind": "weapon",
+            "weaponId": "draco"
+           }
+          },
+          {
+           "type": "gate",
+           "at": 30,
+           "gate": {
+            "op": "mul",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 42,
+           "gate": {
+            "op": "add",
+            "value": 10
+           }
+          }
+         ]
+        },
+        {
+         "barricadeHp": 5,
+         "items": [
+          {
+           "type": "gate",
+           "at": 10,
+           "gate": {
+            "op": "add",
+            "value": 10
+           }
+          },
+          {
+           "type": "gate",
+           "at": 26,
+           "gate": {
+            "op": "div",
+            "value": 2
+           }
+          },
+          {
+           "type": "gate",
+           "at": 40,
+           "gate": {
+            "op": "mul",
+            "value": 3
+           }
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "gap",
+       "length": 6
+      },
+      {
+       "kind": "gates",
+       "length": 36,
+       "rows": [
+        {
+         "at": 0,
+         "gates": [
+          {
+           "op": "add",
+           "value": 25
+          },
+          {
+           "op": "mul",
+           "value": 2
+          }
+         ]
+        },
+        {
+         "at": 18,
+         "gates": [
+          {
+           "op": "mul",
+           "value": 2
+          },
+          {
+           "op": "sub",
+           "value": 20
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "obstacles",
+       "length": 32,
+       "items": [
+        {
+         "kind": "barrel",
+         "hp": 70,
+         "x": -0.6,
+         "at": 4,
+         "rarity": "rare",
+         "reward": {
+          "kind": "armor_vest"
+         }
+        },
+        {
+         "kind": "barrel",
+         "hp": 80,
+         "x": 0.6,
+         "at": 4,
+         "rarity": "epic",
+         "reward": {
+          "kind": "drum_mag"
+         }
+        },
+        {
+         "kind": "crate",
+         "hp": 80,
+         "x": 0,
+         "at": 18,
+         "rarity": "rare",
+         "reward": {
+          "kind": "recruits",
+          "count": 25
+         }
+        }
+       ]
+      },
+      {
+       "kind": "horde",
+       "length": 36,
+       "side": "enemy",
+       "columns": 11,
+       "enemies": [
+        {
+         "enemyId": "patrol_officer",
+         "count": 50
+        },
+        {
+         "enemyId": "riot_cop",
+         "count": 14
+        }
+       ],
+       "pickups": []
+      },
+      {
+       "kind": "boss",
+       "bossId": "auto",
+       "hpMult": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hood_block",
+   "displayName": "Hood Block",
+   "unlockOrder": 1,
+   "theme": {
+    "sky": "#f7c98b",
+    "fog": "#f2b97a",
+    "fogNear": 35,
+    "fogFar": 120,
+    "ground": "#8a7d6b",
+    "road": "#4d4a48",
+    "roadLine": "#e8d9a0",
+    "edge": "sidewalk",
+    "edgeColor": "#b8ab98",
+    "sun": "#ffcf8a",
+    "sunIntensity": 2.2,
+    "ambient": "#ffd9b0",
+    "ambientIntensity": 1.0,
+    "props": [
+     "corner_store",
+     "chain_fence",
+     "palm_tree",
+     "power_pole",
+     "old_sedan"
+    ],
+    "night": false
+   },
+   "levels": []
+  },
+  {
+   "id": "harbor_pier",
+   "displayName": "Harbor Pier",
+   "unlockOrder": 2,
+   "theme": {
+    "sky": "#a9c4d6",
+    "fog": "#c4d3dc",
+    "fogNear": 35,
+    "fogFar": 130,
+    "ground": "#245a7a",
+    "road": "#6a6157",
+    "roadLine": "#ffd23f",
+    "edge": "pier",
+    "edgeColor": "#7a5a3c",
+    "sun": "#ffffff",
+    "sunIntensity": 2.0,
+    "ambient": "#c8d8e8",
+    "ambientIntensity": 1.1,
+    "props": [
+     "shipping_container",
+     "crane",
+     "bollard"
+    ],
+    "night": false
+   },
+   "levels": []
+  },
+  {
+   "id": "downtown_strip",
+   "displayName": "Downtown Strip",
+   "unlockOrder": 3,
+   "theme": {
+    "sky": "#120c2a",
+    "fog": "#24163f",
+    "fogNear": 25,
+    "fogFar": 100,
+    "ground": "#1a1a24",
+    "road": "#2a2a33",
+    "roadLine": "#ff3fb4",
+    "edge": "sidewalk",
+    "edgeColor": "#3a3a48",
+    "sun": "#7a6cff",
+    "sunIntensity": 0.8,
+    "ambient": "#5a4a9a",
+    "ambientIntensity": 0.9,
+    "props": [
+     "storefront",
+     "neon_sign",
+     "street_lamp"
+    ],
+    "night": true
+   },
+   "levels": []
+  },
+  {
+   "id": "rail_yard",
+   "displayName": "Rail Yard",
+   "unlockOrder": 4,
+   "theme": {
+    "sky": "#ff9a5a",
+    "fog": "#f08a5a",
+    "fogNear": 35,
+    "fogFar": 120,
+    "ground": "#6b5a4a",
+    "road": "#5a5048",
+    "roadLine": "#d9c27a",
+    "edge": "gravel",
+    "edgeColor": "#7d6e60",
+    "sun": "#ffb070",
+    "sunIntensity": 2.2,
+    "ambient": "#ffc8a0",
+    "ambientIntensity": 1.0,
+    "props": [
+     "freight_car",
+     "signal_light",
+     "rail_track"
+    ],
+    "night": false
+   },
+   "levels": []
+  }
+ ]
+}

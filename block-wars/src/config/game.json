@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "title": "BLOCK WARS",
+  "sim": {
+    "tickHz": 30,
+    "maxStepsPerFrame": 5,
+    "maxShotsPerTick": 90,
+    "targetCandidates": 16,
+    "seed": 1337
+  },
+  "road": {
+    "width": 9,
+    "laneWallHeight": 0.6,
+    "gateDepth": 0.4,
+    "obstacleDepth": 1.2,
+    "barricadeDepth": 0.8
+  },
+  "crowd": {
+    "runSpeed": 7.5,
+    "chargeSpeed": 6,
+    "steerSpeed": 11,
+    "spacing": 0.36,
+    "maxHalfWidth": 2.4,
+    "unitHp": 20,
+    "leaderHp": 140,
+    "meleeDps": 14,
+    "contactGap": 0.9,
+    "engageRange": 17,
+    "leaderScale": 1.35,
+    "maxCrew": 999,
+    "startCrew": 0,
+    "squadStartWeaponId": "pistol_9"
+  },
+  "horde": {
+    "spacing": 0.62,
+    "aggroRange": 30,
+    "pushThreshold": 1.0,
+    "flankDistance": 1.6
+  },
+  "pickups": {
+    "armorUnitHpMult": 1.5,
+    "armorLeaderReduction": 0.25,
+    "drumMagMult": 2,
+    "lowrider": { "durationSec": 5, "speedMult": 1.8, "damageMult": 1.6 },
+    "dirtBike": { "durationSec": 2.5, "speedMult": 2.4, "invulnerable": true },
+    "rarityLootMult": { "common": 1, "rare": 1.5, "epic": 2.25, "legendary": 3.5 }
+  },
+  "boss": { "arenaLength": 46, "slowMoSec": 1.6, "slowMoScale": 0.25 },
+  "camera": {
+    "fov": 52,
+    "height": 13,
+    "back": 10.5,
+    "lookAhead": 9,
+    "zoomPerSqrtCrew": 0.045,
+    "maxZoom": 1.6,
+    "followLerp": 0.12,
+    "bossPushIn": 0.55
+  },
+  "render": {
+    "maxCrewInstances": 1000,
+    "maxEnemyInstances": 2000,
+    "maxTracers": 400,
+    "maxParticles": 1500,
+    "maxDamageNumbers": 40,
+    "maxLabels": 48,
+    "tracerLife": 0.09,
+    "damageNumberLife": 0.7,
+    "pixelRatioCap": 2,
+    "shadows": false
+  },
+  "input": { "dragMetersPerScreen": 13 },
+  "rarityColors": { "common": "#3ee26b", "rare": "#3aa0ff", "epic": "#b45cff", "legendary": "#ffc61a" },
+  "gateColors": { "negative": "#3a3d44", "negativeText": "#ff6060" },
+  "banners": {
+    "durationSec": 1.8,
+    "text": {
+      "pickLane": "PICK YOUR LANE",
+      "grow": "GROW YOUR CREW",
+      "runItUp": "RUN IT UP",
+      "hold": "HOLD THE BLOCK",
+      "push": "PUSH UP",
+      "boss": "BOSS INCOMING",
+      "clear": "BLOCK CLEARED",
+      "fail": "CREW DOWN",
+      "enrage": "HE'S MAD NOW"
+    }
+  },
+  "runCap": { "maxLevelSec": 120 }
+}

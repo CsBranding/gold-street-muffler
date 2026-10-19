@@ -1,0 +1,333 @@
+{
+  "title": "BLOCK WARS characters.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "customization": {
+      "type": "object",
+      "properties": {
+        "skinTones": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          }
+        },
+        "hairStyles": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "faceTattoos": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outfitPieces": {
+          "type": "object",
+          "properties": {
+            "hats": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tops": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "shoes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "hats",
+            "tops",
+            "shoes"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "skinTones",
+        "hairStyles",
+        "faceTattoos",
+        "outfitPieces"
+      ],
+      "additionalProperties": false
+    },
+    "characters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "factionId": {
+            "type": "string",
+            "enum": [
+              "red",
+              "blue"
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "unlock": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "default"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "shards"
+                  },
+                  "shards": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "kind",
+                  "shards"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "perk": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "fire_rate"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "starting_crew"
+                  },
+                  "value": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "barrel_loot"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "leader_damage_reduction"
+                  },
+                  "value": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "primaryWeaponId": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "idlePose": {
+            "type": "string",
+            "enum": [
+              "lean_phone",
+              "arms_crossed_sleeve",
+              "hands_in_pockets",
+              "chin_up"
+            ]
+          },
+          "skinTone": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "outfit": {
+            "type": "object",
+            "properties": {
+              "hat": {
+                "type": "string",
+                "enum": [
+                  "snapback_back",
+                  "bandana",
+                  "beanie",
+                  "none",
+                  "durag",
+                  "fitted"
+                ]
+              },
+              "hatColor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "top": {
+                "type": "string",
+                "enum": [
+                  "hoodie_open",
+                  "flannel_open",
+                  "tee",
+                  "jersey",
+                  "puffer"
+                ]
+              },
+              "topColor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "shirtColor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "pantsColor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "shoeColor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "shoeAccent": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "chain": {
+                "type": "boolean"
+              },
+              "sunglasses": {
+                "type": "boolean"
+              },
+              "pocketBandana": {
+                "type": "boolean"
+              },
+              "tattoos": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "neck",
+                    "hands",
+                    "forearms",
+                    "face"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "hat",
+              "hatColor",
+              "top",
+              "topColor",
+              "shirtColor",
+              "pantsColor",
+              "shoeColor",
+              "shoeAccent",
+              "chain",
+              "sunglasses",
+              "pocketBandana",
+              "tattoos"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "factionId",
+          "displayName",
+          "bio",
+          "unlock",
+          "perk",
+          "primaryWeaponId",
+          "idlePose",
+          "skinTone",
+          "outfit"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "customization",
+    "characters"
+  ],
+  "additionalProperties": false
+}

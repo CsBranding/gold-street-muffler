@@ -1,0 +1,252 @@
+{
+  "title": "BLOCK WARS weapons.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "levelDamageMult": {
+      "minItems": 5,
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "levelRateMult": {
+      "minItems": 5,
+      "maxItems": 5,
+      "type": "array",
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "spreadValues": {
+      "type": "object",
+      "properties": {
+        "low": {
+          "type": "number",
+          "minimum": 0
+        },
+        "med": {
+          "type": "number",
+          "minimum": 0
+        },
+        "high": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cone": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "low",
+        "med",
+        "high",
+        "cone"
+      ],
+      "additionalProperties": false
+    },
+    "maxMuzzleClimb": {
+      "type": "number",
+      "minimum": 0
+    },
+    "critMultiplier": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "baseCritChance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "shakeByClass": {
+      "type": "object",
+      "properties": {
+        "pistol": {
+          "type": "number",
+          "minimum": 0
+        },
+        "smg": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rifle": {
+          "type": "number",
+          "minimum": 0
+        },
+        "shotgun": {
+          "type": "number",
+          "minimum": 0
+        },
+        "lmg": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "pistol",
+        "smg",
+        "rifle",
+        "shotgun",
+        "lmg"
+      ],
+      "additionalProperties": false
+    },
+    "weapons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "fireMode": {
+            "type": "string",
+            "enum": [
+              "semi",
+              "auto",
+              "pump"
+            ]
+          },
+          "damage": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "pellets": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "ratePerSec": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "spread": {
+            "type": "string",
+            "enum": [
+              "low",
+              "med",
+              "high",
+              "cone"
+            ]
+          },
+          "mag": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reloadSec": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "rangeM": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "rarity": {
+            "type": "string",
+            "enum": [
+              "common",
+              "rare",
+              "epic",
+              "legendary"
+            ]
+          },
+          "pierce": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "critBonus": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "knockback": {
+            "type": "number",
+            "minimum": 0
+          },
+          "slowMult": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "muzzleClimb": {
+            "type": "number",
+            "minimum": 0
+          },
+          "class": {
+            "type": "string",
+            "enum": [
+              "pistol",
+              "smg",
+              "rifle",
+              "shotgun",
+              "lmg"
+            ]
+          },
+          "special": {
+            "type": "string"
+          },
+          "skins": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "default",
+                "chrome",
+                "gold",
+                "iced_out"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "fireMode",
+          "damage",
+          "pellets",
+          "ratePerSec",
+          "spread",
+          "mag",
+          "reloadSec",
+          "rangeM",
+          "rarity",
+          "pierce",
+          "critBonus",
+          "knockback",
+          "slowMult",
+          "muzzleClimb",
+          "class",
+          "special",
+          "skins"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "levelDamageMult",
+    "levelRateMult",
+    "spreadValues",
+    "maxMuzzleClimb",
+    "critMultiplier",
+    "baseCritChance",
+    "shakeByClass",
+    "weapons"
+  ],
+  "additionalProperties": false
+}

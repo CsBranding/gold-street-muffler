@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "customization": {
+    "skinTones": ["#f1c9a5", "#d9a37a", "#b97a52", "#8d5a3b", "#6b4029", "#4a2c1d"],
+    "hairStyles": ["buzz", "waves", "braids", "twists", "fade", "locs"],
+    "faceTattoos": ["none", "teardrop", "cheek_star", "brow_lines", "under_eye_script"],
+    "outfitPieces": {
+      "hats": ["snapback_back", "bandana", "beanie", "durag", "fitted", "none"],
+      "tops": ["hoodie_open", "flannel_open", "tee", "jersey", "puffer"],
+      "shoes": ["low_top", "high_top", "runner"]
+    }
+  },
+  "characters": [
+    {
+      "id": "red_lean",
+      "factionId": "red",
+      "displayName": "Lean",
+      "bio": "Always on the phone, always three moves ahead.",
+      "unlock": { "kind": "default" },
+      "perk": { "kind": "fire_rate", "value": 0.1 },
+      "primaryWeaponId": "pistol_9",
+      "idlePose": "lean_phone",
+      "skinTone": "#6b4029",
+      "outfit": {
+        "hat": "snapback_back", "hatColor": "#d81e2b",
+        "top": "hoodie_open", "topColor": "#d81e2b", "shirtColor": "#f4f4f4",
+        "pantsColor": "#2b3548", "shoeColor": "#f4f4f4", "shoeAccent": "#d81e2b",
+        "chain": true, "sunglasses": false, "pocketBandana": true,
+        "tattoos": ["neck", "hands"]
+      }
+    },
+    {
+      "id": "red_big_ru",
+      "factionId": "red",
+      "displayName": "Big Ru",
+      "bio": "Brings the whole block with him.",
+      "unlock": { "kind": "shards", "shards": 20 },
+      "perk": { "kind": "starting_crew", "value": 5 },
+      "primaryWeaponId": "pistol_9",
+      "idlePose": "chin_up",
+      "skinTone": "#4a2c1d",
+      "outfit": {
+        "hat": "fitted", "hatColor": "#8c0f18",
+        "top": "puffer", "topColor": "#c4121f", "shirtColor": "#1a1a1a",
+        "pantsColor": "#1e2430", "shoeColor": "#1a1a1a", "shoeAccent": "#e0202e",
+        "chain": true, "sunglasses": false, "pocketBandana": true,
+        "tattoos": ["hands"]
+      }
+    },
+    {
+      "id": "red_lucky",
+      "factionId": "red",
+      "displayName": "Lucky",
+      "bio": "Somehow every crate he opens has something in it.",
+      "unlock": { "kind": "shards", "shards": 30 },
+      "perk": { "kind": "barrel_loot", "value": 0.15 },
+      "primaryWeaponId": "pistol_9",
+      "idlePose": "hands_in_pockets",
+      "skinTone": "#b97a52",
+      "outfit": {
+        "hat": "beanie", "hatColor": "#e0202e",
+        "top": "jersey", "topColor": "#e0202e", "shirtColor": "#ffffff",
+        "pantsColor": "#2b3548", "shoeColor": "#ffffff", "shoeAccent": "#e0202e",
+        "chain": false, "sunglasses": true, "pocketBandana": true,
+        "tattoos": ["forearms", "face"]
+      }
+    },
+    {
+      "id": "red_tank",
+      "factionId": "red",
+      "displayName": "Tank",
+      "bio": "Walked it off. Every time.",
+      "unlock": { "kind": "shards", "shards": 40 },
+      "perk": { "kind": "leader_damage_reduction", "value": 0.2 },
+      "primaryWeaponId": "pistol_9",
+      "idlePose": "chin_up",
+      "skinTone": "#8d5a3b",
+      "outfit": {
+        "hat": "durag", "hatColor": "#c4121f",
+        "top": "tee", "topColor": "#ffffff", "shirtColor": "#ffffff",
+        "pantsColor": "#1e2430", "shoeColor": "#e0202e", "shoeAccent": "#ffffff",
+        "chain": true, "sunglasses": false, "pocketBandana": true,
+        "tattoos": ["neck", "forearms", "hands"]
+      }
+    },
+    {
+      "id": "blue_shades",
+      "factionId": "blue",
+      "displayName": "Shades",
+      "bio": "Never takes the glasses off. Never misses.",
+      "unlock": { "kind": "default" },
+      "perk": { "kind": "fire_rate", "value": 0.1 },
+      "primaryWeaponId": "pistol_9",
+      "idlePose": "arms_crossed_sleeve",
+      "skinTone": "#6b4029",
+      "outfit": {
+        "hat": "bandana", "hatColor": "#1f63e0",
+        "top": "flannel_open", "topColor": "#2a56b8", "shirtColor": "#1a2340",
+        "pantsColor": "#232c3d", "shoeColor": "#f4f4f4", "shoeAccent": "#1f63e0",
+        "chain": true, "sunglasses": true, "pocketBandana": false,
+        "tattoos": ["forearms"]
+      }
+    },
+    {
+      "id": "blue_deuce",
+      "factionId": "blue",
+      "displayName": "Deuce",
+      "bio": "Calls in favors from every corner.",
+      "unlock": { "kind": "shards", "shards": 20 },
+      "perk": { "kind": "starting_crew", "value": 5 },
+      "primaryWeaponId": "pistol_9",
+      "idlePose": "chin_up",
+      "skinTone": "#4a2c1d",
+      "outfit": {
+        "hat": "fitted", "hatColor": "#0e2f7a",
+        "top": "puffer", "topColor": "#1550c4", "shirtColor": "#ffffff",
+        "pantsColor": "#1e2430", "shoeColor": "#1a1a1a", "shoeAccent": "#1f63e0",
+        "chain": true, "sunglasses": false, "pocketBandana": false,
+        "tattoos": ["hands"]
+      }
+    },
+    {
+      "id": "blue_slick",
+      "factionId": "blue",
+      "displayName": "Slick",
+      "bio": "Finds the good stuff before anyone else looks.",
+      "unlock": { "kind": "shards", "shards": 30 },
+      "perk": { "kind": "barrel_loot", "value": 0.15 },
+      "primaryWeaponId": "pistol_9",
+      "idlePose": "hands_in_pockets",
+      "skinTone": "#d9a37a",
+      "outfit": {
+        "hat": "beanie", "hatColor": "#1f63e0",
+        "top": "jersey", "topColor": "#1f63e0", "shirtColor": "#ffffff",
+        "pantsColor": "#232c3d", "shoeColor": "#ffffff", "shoeAccent": "#1f63e0",
+        "chain": false, "sunglasses": false, "pocketBandana": true,
+        "tattoos": ["neck", "face"]
+      }
+    },
+    {
+      "id": "blue_wall",
+      "factionId": "blue",
+      "displayName": "Wall",
+      "bio": "You go through him or you don't go.",
+      "unlock": { "kind": "shards", "shards": 40 },
+      "perk": { "kind": "leader_damage_reduction", "value": 0.2 },
+      "primaryWeaponId": "pistol_9",
+      "idlePose": "arms_crossed_sleeve",
+      "skinTone": "#8d5a3b",
+      "outfit": {
+        "hat": "durag", "hatColor": "#1550c4",
+        "top": "tee", "topColor": "#1a2340", "shirtColor": "#1a2340",
+        "pantsColor": "#1e2430", "shoeColor": "#1f63e0", "shoeAccent": "#ffffff",
+        "chain": true, "sunglasses": true, "pocketBandana": true,
+        "tattoos": ["forearms", "hands"]
+      }
+    }
+  ]
+}

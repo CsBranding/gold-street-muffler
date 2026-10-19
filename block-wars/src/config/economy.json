@@ -1,0 +1,203 @@
+{
+  "version": 1,
+  "currencies": [
+    {
+      "id": "cash",
+      "displayName": "Cash",
+      "color": "#3ee26b",
+      "start": 0
+    },
+    {
+      "id": "rep",
+      "displayName": "Rep",
+      "color": "#ffc61a",
+      "start": 0
+    },
+    {
+      "id": "ice",
+      "displayName": "Ice",
+      "color": "#7fe7ff",
+      "start": 25
+    }
+  ],
+  "levelRewards": {
+    "cashGrowthPerLevel": 0.12,
+    "repPerLevel": 15,
+    "cashPerSurvivor": 0.5,
+    "firstClearIceBonus": 5,
+    "stars": [
+      0.0,
+      0.35,
+      0.7
+    ]
+  },
+  "upgrades": [
+    {
+      "id": "starting_crew",
+      "displayName": "Starting Crew",
+      "maxLevel": 30,
+      "baseCost": 100,
+      "costGrowth": 1.25,
+      "perLevel": 1
+    },
+    {
+      "id": "crew_damage",
+      "displayName": "Crew Damage",
+      "maxLevel": 30,
+      "baseCost": 120,
+      "costGrowth": 1.27,
+      "perLevel": 0.05
+    },
+    {
+      "id": "fire_rate",
+      "displayName": "Fire Rate",
+      "maxLevel": 20,
+      "baseCost": 150,
+      "costGrowth": 1.3,
+      "perLevel": 0.03
+    },
+    {
+      "id": "leader_hp",
+      "displayName": "Leader HP",
+      "maxLevel": 30,
+      "baseCost": 90,
+      "costGrowth": 1.22,
+      "perLevel": 20
+    },
+    {
+      "id": "loot_bonus",
+      "displayName": "Loot Bonus",
+      "maxLevel": 20,
+      "baseCost": 200,
+      "costGrowth": 1.3,
+      "perLevel": 0.05
+    },
+    {
+      "id": "offline_income",
+      "displayName": "Offline Income",
+      "maxLevel": 20,
+      "baseCost": 250,
+      "costGrowth": 1.35,
+      "perLevel": 0.1
+    }
+  ],
+  "roster": {
+    "shardsPerLeaderLevel": [
+      10,
+      20,
+      40,
+      80,
+      160
+    ],
+    "maxLeaderLevel": 6
+  },
+  "hoodBase": [
+    {
+      "id": "corner_store",
+      "displayName": "Corner Store",
+      "maxLevel": 10,
+      "baseCost": 500,
+      "costGrowth": 1.6,
+      "effect": "offline_income_per_hour",
+      "perLevel": 40
+    },
+    {
+      "id": "gym",
+      "displayName": "Gym",
+      "maxLevel": 10,
+      "baseCost": 600,
+      "costGrowth": 1.6,
+      "effect": "crew_unit_hp_mult",
+      "perLevel": 0.06
+    },
+    {
+      "id": "armory",
+      "displayName": "Armory",
+      "maxLevel": 10,
+      "baseCost": 800,
+      "costGrowth": 1.7,
+      "effect": "weapon_unlock_tier",
+      "perLevel": 1
+    },
+    {
+      "id": "garage",
+      "displayName": "Garage",
+      "maxLevel": 10,
+      "baseCost": 700,
+      "costGrowth": 1.65,
+      "effect": "vehicle_duration_mult",
+      "perLevel": 0.08
+    }
+  ],
+  "offlineIncome": {
+    "basePerHour": 30,
+    "capHours": 8
+  },
+  "ads": {
+    "interstitialFreeLevels": 5,
+    "interstitialEveryNLevels": 3,
+    "rewarded": [
+      "double_loot",
+      "revive",
+      "daily_chest",
+      "double_offline"
+    ],
+    "reviveCrew": 20,
+    "maxRevivesPerLevel": 1
+  },
+  "iap": [
+    {
+      "id": "remove_ads",
+      "displayName": "Remove Ads",
+      "priceUsd": 3.99,
+      "grants": {
+        "remove_ads": 1
+      }
+    },
+    {
+      "id": "starter_pack",
+      "displayName": "Starter Pack",
+      "priceUsd": 1.99,
+      "grants": {
+        "ice": 150,
+        "cash": 5000
+      }
+    },
+    {
+      "id": "ice_small",
+      "displayName": "Pile of Ice",
+      "priceUsd": 0.99,
+      "grants": {
+        "ice": 80
+      }
+    },
+    {
+      "id": "ice_large",
+      "displayName": "Vault of Ice",
+      "priceUsd": 9.99,
+      "grants": {
+        "ice": 1000
+      }
+    },
+    {
+      "id": "skins_gold",
+      "displayName": "Gold Skin Bundle",
+      "priceUsd": 4.99,
+      "grants": {
+        "skin_gold": 1
+      }
+    }
+  ],
+  "daily": {
+    "loginStreakCash": [
+      100,
+      150,
+      200,
+      300,
+      400,
+      600,
+      1000
+    ],
+    "missionsPerDay": 3
+  }
+}

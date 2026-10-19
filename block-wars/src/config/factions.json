@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "police": {
+    "displayName": "The Law",
+    "colors": { "primary": "#1b2440", "secondary": "#0b0d14", "lightRed": "#ff2a3a", "lightBlue": "#2a7bff" }
+  },
+  "factions": [
+    {
+      "id": "red",
+      "displayName": "Bloods",
+      "shortName": "RED",
+      "slogan": "Paint the block red.",
+      "colors": { "primary": "#e0202e", "secondary": "#ffffff", "accent": "#8c0f18", "ui": "#c4121f" },
+      "rivalId": "blue",
+      "defaultLeaderId": "red_lean"
+    },
+    {
+      "id": "blue",
+      "displayName": "Crips",
+      "shortName": "BLUE",
+      "slogan": "Stay cool. Stay blue.",
+      "colors": { "primary": "#1f63e0", "secondary": "#ffffff", "accent": "#0e2f7a", "ui": "#1550c4" },
+      "rivalId": "red",
+      "defaultLeaderId": "blue_shades"
+    }
+  ]
+}

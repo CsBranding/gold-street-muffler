@@ -1,0 +1,28 @@
+{
+  "name": "block-wars",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "BLOCK WARS — portrait lane-runner / crowd-battle game (Three.js + TypeScript)",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "schemas": "tsx scripts/gen-schemas.ts",
+    "validate": "tsx scripts/validate-config.ts"
+  },
+  "dependencies": {
+    "three": "0.170.0",
+    "zod": "4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "@types/three": "0.170.0",
+    "tsx": "4.19.2",
+    "typescript": "5.7.2",
+    "vite": "6.0.7",
+    "vitest": "2.1.8"
+  }
+}

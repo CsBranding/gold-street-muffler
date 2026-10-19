@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "bosses": [
+    {
+      "id": "big_sarge",
+      "displayName": "BIG SARGE",
+      "side": "police",
+      "heightMultOfCrew": 6,
+      "baseHp": 9000,
+      "attacks": [
+        {
+          "id": "baton_slam",
+          "displayName": "Baton Slam",
+          "weight": 3,
+          "telegraphSec": 1.0,
+          "cooldownSec": 4,
+          "radius": 2.6,
+          "durationSec": 0,
+          "dps": 0,
+          "minUnits": 0,
+          "maxUnits": 0,
+          "spawn": [],
+          "leaderDamage": 60,
+          "slowMult": 1,
+          "coneDeg": 0
+        },
+        {
+          "id": "shield_wall",
+          "displayName": "Shield Wall",
+          "weight": 2,
+          "telegraphSec": 0.9,
+          "cooldownSec": 9,
+          "radius": 0,
+          "durationSec": 4,
+          "dps": 0,
+          "minUnits": 0,
+          "maxUnits": 0,
+          "spawn": [],
+          "leaderDamage": 0,
+          "slowMult": 1,
+          "coneDeg": 0
+        },
+        {
+          "id": "taser_chain",
+          "displayName": "Taser Chain",
+          "weight": 2,
+          "telegraphSec": 1.1,
+          "cooldownSec": 7,
+          "radius": 2.2,
+          "durationSec": 0,
+          "dps": 0,
+          "minUnits": 10,
+          "maxUnits": 30,
+          "spawn": [],
+          "leaderDamage": 25,
+          "slowMult": 1,
+          "coneDeg": 0
+        },
+        {
+          "id": "call_backup",
+          "displayName": "Call for Backup",
+          "weight": 1.2,
+          "telegraphSec": 1.2,
+          "cooldownSec": 14,
+          "radius": 0,
+          "durationSec": 0,
+          "dps": 0,
+          "minUnits": 0,
+          "maxUnits": 0,
+          "spawn": [
+            {
+              "enemyId": "patrol_officer",
+              "count": 24
+            },
+            {
+              "enemyId": "cruiser_barricade",
+              "count": 2
+            }
+          ],
+          "leaderDamage": 0,
+          "slowMult": 1,
+          "coneDeg": 0
+        },
+        {
+          "id": "tear_gas",
+          "displayName": "Tear Gas",
+          "weight": 1.5,
+          "telegraphSec": 1.0,
+          "cooldownSec": 10,
+          "radius": 1.5,
+          "durationSec": 5,
+          "dps": 40,
+          "minUnits": 0,
+          "maxUnits": 0,
+          "spawn": [],
+          "leaderDamage": 0,
+          "slowMult": 0.5,
+          "coneDeg": 0
+        }
+      ],
+      "attackIntervalSec": 2.2,
+      "enrage": {
+        "hpFrac": 0.3,
+        "attackSpeedMult": 1.4
+      },
+      "weakPoint": {
+        "chance": 0.15,
+        "mult": 2,
+        "onlyWhenShieldDown": true
+      },
+      "flankOffsetM": 2.2,
+      "standoffM": 16,
+      "contactDps": 80,
+      "cash": 250,
+      "lootBurst": 40
+    },
+    {
+      "id": "big_homie",
+      "displayName": "BIG HOMIE",
+      "side": "rival",
+      "heightMultOfCrew": 4,
+      "baseHp": 5000,
+      "attacks": [
+        {
+          "id": "drum_spray",
+          "displayName": "Drum Draco Spray",
+          "weight": 3,
+          "telegraphSec": 1.0,
+          "cooldownSec": 5,
+          "radius": 12,
+          "durationSec": 1.8,
+          "dps": 90,
+          "minUnits": 0,
+          "maxUnits": 0,
+          "spawn": [],
+          "leaderDamage": 30,
+          "slowMult": 1,
+          "coneDeg": 22
+        },
+        {
+          "id": "summon_runners",
+          "displayName": "Summon Runners",
+          "weight": 2,
+          "telegraphSec": 1.0,
+          "cooldownSec": 9,
+          "radius": 0,
+          "durationSec": 0,
+          "dps": 0,
+          "minUnits": 0,
+          "maxUnits": 0,
+          "spawn": [
+            {
+              "enemyId": "rival_runner",
+              "count": 30
+            }
+          ],
+          "leaderDamage": 0,
+          "slowMult": 1,
+          "coneDeg": 0
+        },
+        {
+          "id": "baton_slam",
+          "displayName": "Bat Swing",
+          "weight": 1,
+          "telegraphSec": 0.9,
+          "cooldownSec": 6,
+          "radius": 2.2,
+          "durationSec": 0,
+          "dps": 0,
+          "minUnits": 0,
+          "maxUnits": 0,
+          "spawn": [],
+          "leaderDamage": 40,
+          "slowMult": 1,
+          "coneDeg": 0
+        }
+      ],
+      "attackIntervalSec": 2.4,
+      "enrage": {
+        "hpFrac": 0.3,
+        "attackSpeedMult": 1.3
+      },
+      "weakPoint": {
+        "chance": 0.12,
+        "mult": 2,
+        "onlyWhenShieldDown": false
+      },
+      "flankOffsetM": 2.0,
+      "standoffM": 14,
+      "contactDps": 60,
+      "cash": 150,
+      "lootBurst": 25
+    }
+  ]
+}

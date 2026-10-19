@@ -1,0 +1,339 @@
+{
+  "title": "BLOCK WARS economy.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "currencies": {
+      "minItems": 3,
+      "maxItems": 3,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "rep",
+              "ice"
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "start": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "color",
+          "start"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "levelRewards": {
+      "type": "object",
+      "properties": {
+        "cashGrowthPerLevel": {
+          "type": "number",
+          "minimum": 0
+        },
+        "repPerLevel": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cashPerSurvivor": {
+          "type": "number",
+          "minimum": 0
+        },
+        "firstClearIceBonus": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stars": {
+          "minItems": 3,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "required": [
+        "cashGrowthPerLevel",
+        "repPerLevel",
+        "cashPerSurvivor",
+        "firstClearIceBonus",
+        "stars"
+      ],
+      "additionalProperties": false
+    },
+    "upgrades": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "starting_crew",
+              "crew_damage",
+              "fire_rate",
+              "leader_hp",
+              "loot_bonus",
+              "offline_income"
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "maxLevel": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "baseCost": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "costGrowth": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "perLevel": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "maxLevel",
+          "baseCost",
+          "costGrowth",
+          "perLevel"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "roster": {
+      "type": "object",
+      "properties": {
+        "shardsPerLeaderLevel": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "maxLeaderLevel": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "shardsPerLeaderLevel",
+        "maxLeaderLevel"
+      ],
+      "additionalProperties": false
+    },
+    "hoodBase": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "corner_store",
+              "gym",
+              "armory",
+              "garage"
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "maxLevel": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "baseCost": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "costGrowth": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "effect": {
+            "type": "string"
+          },
+          "perLevel": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "maxLevel",
+          "baseCost",
+          "costGrowth",
+          "effect",
+          "perLevel"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "offlineIncome": {
+      "type": "object",
+      "properties": {
+        "basePerHour": {
+          "type": "number",
+          "minimum": 0
+        },
+        "capHours": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "basePerHour",
+        "capHours"
+      ],
+      "additionalProperties": false
+    },
+    "ads": {
+      "type": "object",
+      "properties": {
+        "interstitialFreeLevels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "interstitialEveryNLevels": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "rewarded": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "double_loot",
+              "revive",
+              "daily_chest",
+              "double_offline"
+            ]
+          }
+        },
+        "reviveCrew": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxRevivesPerLevel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "interstitialFreeLevels",
+        "interstitialEveryNLevels",
+        "rewarded",
+        "reviveCrew",
+        "maxRevivesPerLevel"
+      ],
+      "additionalProperties": false
+    },
+    "iap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "priceUsd": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "grants": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "priceUsd",
+          "grants"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "daily": {
+      "type": "object",
+      "properties": {
+        "loginStreakCash": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "missionsPerDay": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "loginStreakCash",
+        "missionsPerDay"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "currencies",
+    "levelRewards",
+    "upgrades",
+    "roster",
+    "hoodBase",
+    "offlineIncome",
+    "ads",
+    "iap",
+    "daily"
+  ],
+  "additionalProperties": false
+}

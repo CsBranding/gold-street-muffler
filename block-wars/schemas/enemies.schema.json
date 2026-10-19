@@ -1,0 +1,150 @@
+{
+  "title": "BLOCK WARS enemies.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "enemies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "police",
+              "rival"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "unit",
+              "obstacle",
+              "hazard"
+            ]
+          },
+          "hp": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0
+          },
+          "dps": {
+            "type": "number",
+            "minimum": 0
+          },
+          "rangeM": {
+            "type": "number",
+            "minimum": 0
+          },
+          "meleeDps": {
+            "type": "number",
+            "minimum": 0
+          },
+          "shieldHp": {
+            "type": "number",
+            "minimum": 0
+          },
+          "shieldArcDeg": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 180
+          },
+          "armorMult": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "scale": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "explodeDamage": {
+            "type": "number",
+            "minimum": 0
+          },
+          "explodeRadius": {
+            "type": "number",
+            "minimum": 0
+          },
+          "hazard": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "spotlight",
+                  "drive_by"
+                ]
+              },
+              "damageTakenMult": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "dps": {
+                "type": "number",
+                "minimum": 0
+              },
+              "telegraphSec": {
+                "type": "number",
+                "minimum": 0
+              },
+              "durationSec": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "damageTakenMult",
+              "dps",
+              "telegraphSec",
+              "durationSec"
+            ],
+            "additionalProperties": false
+          },
+          "cash": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "side",
+          "role",
+          "hp",
+          "speed",
+          "dps",
+          "rangeM",
+          "meleeDps",
+          "shieldHp",
+          "shieldArcDeg",
+          "armorMult",
+          "scale",
+          "explodeDamage",
+          "explodeRadius",
+          "cash"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "enemies"
+  ],
+  "additionalProperties": false
+}

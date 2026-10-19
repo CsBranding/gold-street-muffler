@@ -1,0 +1,576 @@
+{
+  "title": "BLOCK WARS game.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "sim": {
+      "type": "object",
+      "properties": {
+        "tickHz": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxStepsPerFrame": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxShotsPerTick": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "targetCandidates": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "tickHz",
+        "maxStepsPerFrame",
+        "maxShotsPerTick",
+        "targetCandidates",
+        "seed"
+      ],
+      "additionalProperties": false
+    },
+    "road": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "laneWallHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "gateDepth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "obstacleDepth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "barricadeDepth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "width",
+        "laneWallHeight",
+        "gateDepth",
+        "obstacleDepth",
+        "barricadeDepth"
+      ],
+      "additionalProperties": false
+    },
+    "crowd": {
+      "type": "object",
+      "properties": {
+        "runSpeed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "chargeSpeed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "steerSpeed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "spacing": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maxHalfWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "unitHp": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "leaderHp": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "meleeDps": {
+          "type": "number",
+          "minimum": 0
+        },
+        "contactGap": {
+          "type": "number",
+          "minimum": 0
+        },
+        "engageRange": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "leaderScale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maxCrew": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "startCrew": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "squadStartWeaponId": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        }
+      },
+      "required": [
+        "runSpeed",
+        "chargeSpeed",
+        "steerSpeed",
+        "spacing",
+        "maxHalfWidth",
+        "unitHp",
+        "leaderHp",
+        "meleeDps",
+        "contactGap",
+        "engageRange",
+        "leaderScale",
+        "maxCrew",
+        "startCrew",
+        "squadStartWeaponId"
+      ],
+      "additionalProperties": false
+    },
+    "horde": {
+      "type": "object",
+      "properties": {
+        "spacing": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "aggroRange": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "pushThreshold": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "flankDistance": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "spacing",
+        "aggroRange",
+        "pushThreshold",
+        "flankDistance"
+      ],
+      "additionalProperties": false
+    },
+    "pickups": {
+      "type": "object",
+      "properties": {
+        "armorUnitHpMult": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "armorLeaderReduction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "drumMagMult": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "lowrider": {
+          "type": "object",
+          "properties": {
+            "durationSec": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "speedMult": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "damageMult": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "durationSec",
+            "speedMult",
+            "damageMult"
+          ],
+          "additionalProperties": false
+        },
+        "dirtBike": {
+          "type": "object",
+          "properties": {
+            "durationSec": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "speedMult": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "invulnerable": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "durationSec",
+            "speedMult",
+            "invulnerable"
+          ],
+          "additionalProperties": false
+        },
+        "rarityLootMult": {
+          "type": "object",
+          "properties": {
+            "common": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "rare": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "epic": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "legendary": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "common",
+            "rare",
+            "epic",
+            "legendary"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "armorUnitHpMult",
+        "armorLeaderReduction",
+        "drumMagMult",
+        "lowrider",
+        "dirtBike",
+        "rarityLootMult"
+      ],
+      "additionalProperties": false
+    },
+    "boss": {
+      "type": "object",
+      "properties": {
+        "arenaLength": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "slowMoSec": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "slowMoScale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "arenaLength",
+        "slowMoSec",
+        "slowMoScale"
+      ],
+      "additionalProperties": false
+    },
+    "camera": {
+      "type": "object",
+      "properties": {
+        "fov": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "back": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "lookAhead": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "zoomPerSqrtCrew": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxZoom": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "followLerp": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "bossPushIn": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "fov",
+        "height",
+        "back",
+        "lookAhead",
+        "zoomPerSqrtCrew",
+        "maxZoom",
+        "followLerp",
+        "bossPushIn"
+      ],
+      "additionalProperties": false
+    },
+    "render": {
+      "type": "object",
+      "properties": {
+        "maxCrewInstances": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxEnemyInstances": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxTracers": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxParticles": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxDamageNumbers": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxLabels": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tracerLife": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "damageNumberLife": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "pixelRatioCap": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "shadows": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "maxCrewInstances",
+        "maxEnemyInstances",
+        "maxTracers",
+        "maxParticles",
+        "maxDamageNumbers",
+        "maxLabels",
+        "tracerLife",
+        "damageNumberLife",
+        "pixelRatioCap",
+        "shadows"
+      ],
+      "additionalProperties": false
+    },
+    "input": {
+      "type": "object",
+      "properties": {
+        "dragMetersPerScreen": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "dragMetersPerScreen"
+      ],
+      "additionalProperties": false
+    },
+    "rarityColors": {
+      "type": "object",
+      "properties": {
+        "common": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "rare": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "epic": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "legendary": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        }
+      },
+      "required": [
+        "common",
+        "rare",
+        "epic",
+        "legendary"
+      ],
+      "additionalProperties": false
+    },
+    "gateColors": {
+      "type": "object",
+      "properties": {
+        "negative": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "negativeText": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        }
+      },
+      "required": [
+        "negative",
+        "negativeText"
+      ],
+      "additionalProperties": false
+    },
+    "banners": {
+      "type": "object",
+      "properties": {
+        "durationSec": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "text": {
+          "type": "object",
+          "properties": {
+            "pickLane": {
+              "type": "string"
+            },
+            "grow": {
+              "type": "string"
+            },
+            "runItUp": {
+              "type": "string"
+            },
+            "hold": {
+              "type": "string"
+            },
+            "push": {
+              "type": "string"
+            },
+            "boss": {
+              "type": "string"
+            },
+            "clear": {
+              "type": "string"
+            },
+            "fail": {
+              "type": "string"
+            },
+            "enrage": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pickLane",
+            "grow",
+            "runItUp",
+            "hold",
+            "push",
+            "boss",
+            "clear",
+            "fail",
+            "enrage"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "durationSec",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "runCap": {
+      "type": "object",
+      "properties": {
+        "maxLevelSec": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "maxLevelSec"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "title",
+    "sim",
+    "road",
+    "crowd",
+    "horde",
+    "pickups",
+    "boss",
+    "camera",
+    "render",
+    "input",
+    "rarityColors",
+    "gateColors",
+    "banners",
+    "runCap"
+  ],
+  "additionalProperties": false
+}

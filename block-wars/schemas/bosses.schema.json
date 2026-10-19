@@ -1,0 +1,241 @@
+{
+  "title": "BLOCK WARS bosses.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "bosses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "police",
+              "rival"
+            ]
+          },
+          "heightMultOfCrew": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "baseHp": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "attacks": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "enum": [
+                    "baton_slam",
+                    "shield_wall",
+                    "taser_chain",
+                    "call_backup",
+                    "tear_gas",
+                    "drum_spray",
+                    "summon_runners"
+                  ]
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "weight": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "telegraphSec": {
+                  "type": "number",
+                  "minimum": 0.8,
+                  "maximum": 1.2
+                },
+                "cooldownSec": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "radius": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "durationSec": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "dps": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "minUnits": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maxUnits": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "spawn": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "enemyId": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9_]+$"
+                      },
+                      "count": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "enemyId",
+                      "count"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "leaderDamage": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "slowMult": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "coneDeg": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "id",
+                "displayName",
+                "weight",
+                "telegraphSec",
+                "cooldownSec",
+                "radius",
+                "durationSec",
+                "dps",
+                "minUnits",
+                "maxUnits",
+                "spawn",
+                "leaderDamage",
+                "slowMult",
+                "coneDeg"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "attackIntervalSec": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "enrage": {
+            "type": "object",
+            "properties": {
+              "hpFrac": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "attackSpeedMult": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "hpFrac",
+              "attackSpeedMult"
+            ],
+            "additionalProperties": false
+          },
+          "weakPoint": {
+            "type": "object",
+            "properties": {
+              "chance": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "mult": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "onlyWhenShieldDown": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "chance",
+              "mult",
+              "onlyWhenShieldDown"
+            ],
+            "additionalProperties": false
+          },
+          "flankOffsetM": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "standoffM": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "contactDps": {
+            "type": "number",
+            "minimum": 0
+          },
+          "cash": {
+            "type": "number",
+            "minimum": 0
+          },
+          "lootBurst": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "side",
+          "heightMultOfCrew",
+          "baseHp",
+          "attacks",
+          "attackIntervalSec",
+          "enrage",
+          "weakPoint",
+          "flankOffsetM",
+          "standoffM",
+          "contactDps",
+          "cash",
+          "lootBurst"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "bosses"
+  ],
+  "additionalProperties": false
+}

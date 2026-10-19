@@ -1,0 +1,135 @@
+{
+  "title": "BLOCK WARS factions.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "police": {
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "colors": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "secondary": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "lightRed": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "lightBlue": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          },
+          "required": [
+            "primary",
+            "secondary",
+            "lightRed",
+            "lightBlue"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "displayName",
+        "colors"
+      ],
+      "additionalProperties": false
+    },
+    "factions": {
+      "minItems": 2,
+      "maxItems": 2,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "red",
+              "blue"
+            ]
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "shortName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slogan": {
+            "type": "string"
+          },
+          "colors": {
+            "type": "object",
+            "properties": {
+              "primary": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "secondary": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "accent": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "ui": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              }
+            },
+            "required": [
+              "primary",
+              "secondary",
+              "accent",
+              "ui"
+            ],
+            "additionalProperties": false
+          },
+          "rivalId": {
+            "type": "string",
+            "enum": [
+              "red",
+              "blue"
+            ]
+          },
+          "defaultLeaderId": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "shortName",
+          "slogan",
+          "colors",
+          "rivalId",
+          "defaultLeaderId"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "police",
+    "factions"
+  ],
+  "additionalProperties": false
+}
