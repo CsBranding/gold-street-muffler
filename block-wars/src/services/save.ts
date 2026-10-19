@@ -18,7 +18,7 @@ export interface SaveData {
   upgrades: Record<string, number>;
   selection: { factionId: FactionId; leaderId: string; mode: BattleMode; mapId: string };
   levelsPlayed: number;
-  settings: { haptics: boolean; sound: boolean };
+  settings: { haptics: boolean; sound: boolean; quality?: number };
 }
 
 export interface StorageBackend {

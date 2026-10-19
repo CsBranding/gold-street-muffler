@@ -471,6 +471,23 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
+        "farDistance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maxHiInstances": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "adaptiveFrameMs": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "adaptiveWindowSec": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
         "maxDamageNumbersPerFlush": {
           "type": "integer",
           "exclusiveMinimum": 0,
@@ -486,6 +503,35 @@
         },
         "shadows": {
           "type": "boolean"
+        },
+        "shadowMapSize": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "exposure": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "bloom": {
+          "type": "boolean"
+        },
+        "bloomStrength": {
+          "type": "number",
+          "minimum": 0
+        },
+        "bloomThreshold": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxCorpses": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "corpseLife": {
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       },
       "required": [
@@ -498,10 +544,21 @@
         "tracerLife",
         "tracerWidth",
         "lodDistance",
+        "farDistance",
+        "maxHiInstances",
+        "adaptiveFrameMs",
+        "adaptiveWindowSec",
         "maxDamageNumbersPerFlush",
         "damageNumberLife",
         "pixelRatioCap",
-        "shadows"
+        "shadows",
+        "shadowMapSize",
+        "exposure",
+        "bloom",
+        "bloomStrength",
+        "bloomThreshold",
+        "maxCorpses",
+        "corpseLife"
       ],
       "additionalProperties": false
     },

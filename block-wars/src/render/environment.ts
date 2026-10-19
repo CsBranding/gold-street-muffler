@@ -3,6 +3,9 @@ import * as THREE from 'three';
 import type { MapDef } from '../schema/types';
 import type { CompiledLevel } from '../sim/world';
 import { asphaltTexture } from './textures';
+import { toonGradient } from './vat';
+
+const toon = (color: string, extra: THREE.MeshToonMaterialParameters = {}) => new THREE.MeshToonMaterial({ color, gradientMap: toonGradient(), ...extra });
 
 export interface Environment {
   group: THREE.Group;
@@ -21,19 +24,20 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
   // Road deck
   const tex = asphaltTexture(th.road);
   tex.repeat.set(2, len / 8);
-  const road = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth + 1.2, len), new THREE.MeshLambertMaterial({ map: tex }));
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth + 1.2, len), toon('#ffffff', { map: tex }));
   road.rotation.x = -Math.PI / 2;
   road.position.set(0, 0, zc);
+  road.receiveShadow = true;
   group.add(road);
 
   // Deck side / bridge girder
-  const deckSide = new THREE.Mesh(new THREE.BoxGeometry(roadWidth + 2.4, 1.6, len), new THREE.MeshLambertMaterial({ color: '#8b8f96' }));
+  const deckSide = new THREE.Mesh(new THREE.BoxGeometry(roadWidth + 2.4, 1.6, len), toon('#8b8f96'));
   deckSide.position.set(0, -0.82, zc);
   group.add(deckSide);
 
   // Lane dashes (instanced) — skip inside lane-wall segments where walls take over.
   const dashGeo = new THREE.BoxGeometry(0.14, 0.02, 2.2);
-  const dashMat = new THREE.MeshBasicMaterial({ color: th.roadLine });
+  const dashMat = toon(th.roadLine);
   const dashes: THREE.Matrix4[] = [];
   const m = new THREE.Matrix4();
   for (let z = z0; z < z1; z += 6) {
@@ -47,7 +51,7 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
   group.add(dashMesh);
   // edge lines
   for (const s of [-1, 1]) {
-    const line = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.02, len), new THREE.MeshBasicMaterial({ color: '#f5d33a' }));
+    const line = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.02, len), toon('#f5d33a'));
     line.position.set(s * (half - 0.15), 0.012, zc);
     group.add(line);
   }
@@ -55,10 +59,10 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
   // Edge barriers: concrete jersey barriers with hazard stripes, instanced.
   const barrierGeo = new THREE.BoxGeometry(0.55, 0.85, 3.9);
   barrierGeo.translate(0, 0.425, 0);
-  const barrierMat = new THREE.MeshLambertMaterial({ color: '#c9c6bf' });
+  const barrierMat = toon('#d9d5cc');
   const stripeGeo = new THREE.BoxGeometry(0.57, 0.12, 3.9);
   stripeGeo.translate(0, 0.66, 0);
-  const stripeMat = new THREE.MeshLambertMaterial({ color: '#f2b705' });
+  const stripeMat = toon('#f2b705');
   const nB = Math.ceil(len / 4) * 2;
   const barriers = new THREE.InstancedMesh(barrierGeo, barrierMat, nB);
   const stripes = new THREE.InstancedMesh(stripeGeo, stripeMat, nB);
@@ -70,10 +74,11 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
       stripes.setMatrixAt(bi, m);
       bi++;
     }
+  barriers.receiveShadow = true;
   group.add(barriers, stripes);
 
   // Light poles every ~24m alternating sides
-  const poleMat = new THREE.MeshLambertMaterial({ color: '#7b8088' });
+  const poleMat = toon('#7b8088');
   const lampMat = new THREE.MeshBasicMaterial({ color: '#fff4c8' });
   for (let z = z0 + 10, k = 0; z < z1; z += 24, k++) {
     const s = k % 2 === 0 ? -1 : 1;
@@ -83,12 +88,13 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
     arm.position.set(s * (half + 0.2), 5.95, z);
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.25), lampMat);
     lamp.position.set(s * (half - 0.5), 5.88, z);
+    pole.castShadow = true;
     group.add(pole, arm, lamp);
   }
 
   // Lane walls (low dividers) inside lane segments
-  const wallMat = new THREE.MeshLambertMaterial({ color: '#d8d4cc' });
-  const capMat = new THREE.MeshLambertMaterial({ color: '#2a6fd6' });
+  const wallMat = toon('#e2ded6');
+  const capMat = toon('#2a6fd6');
   for (const w of level.walls) {
     for (let i = 1; i < w.edges.length - 1; i++) {
       const l = w.z1 - w.z0;
@@ -96,6 +102,7 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
       wall.position.set(w.edges[i], wallHeight / 2, (w.z0 + w.z1) / 2);
       const cap = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.08, l), capMat);
       cap.position.set(w.edges[i], wallHeight + 0.04, (w.z0 + w.z1) / 2);
+      wall.castShadow = wall.receiveShadow = true;
       group.add(wall, cap);
     }
   }
@@ -114,7 +121,9 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
       void main(){
         float w = sin(vW.x*0.35+uTime*1.3)*sin(vW.z*0.27-uTime*0.9);
         float sparkle = smoothstep(0.86,1.0, sin(vW.x*1.7+uTime*2.1)*sin(vW.z*1.3+uTime*1.7));
-        vec3 c = mix(uDeep, uColor, 0.5+0.5*w) + sparkle*0.35;
+        vec3 c = mix(uDeep, uColor, 0.5+0.5*w) + sparkle*0.45;
+        // warm sun glints toward the horizon
+        c += vec3(1.0,0.75,0.45) * smoothstep(0.55,1.0,w) * smoothstep(60.0,160.0,vD) * 0.25;
         float f = smoothstep(uFogNear, uFogFar, vD);
         gl_FragColor = vec4(mix(c, uFog, f), 1.0);
       }`,
@@ -124,9 +133,92 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
   water.position.set(0, th.edge === 'water' ? -3 : -0.05, zc);
   group.add(water);
 
+  // ---- sky dome: zenith → horizon gradient with a hazy sun
+  const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    fog: false,
+    uniforms: { uTop: { value: new THREE.Color(th.sky) }, uHorizon: { value: new THREE.Color(th.fog) }, uSun: { value: new THREE.Color(th.sun) }, uSunDir: { value: new THREE.Vector3(-0.35, 0.18, 1).normalize() } },
+    vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: `uniform vec3 uTop; uniform vec3 uHorizon; uniform vec3 uSun; uniform vec3 uSunDir; varying vec3 vDir;
+      void main(){
+        float h = clamp(vDir.y, 0.0, 1.0);
+        vec3 c = mix(uHorizon, uTop, pow(h, 0.55));
+        float sd = max(dot(normalize(vDir), uSunDir), 0.0);
+        c += uSun * (pow(sd, 400.0) * 1.6 + pow(sd, 12.0) * 0.35);
+        gl_FragColor = vec4(c, 1.0);
+      }`,
+  });
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(320, 24, 12), skyMat);
+  sky.renderOrder = -1;
+  sky.frustumCulled = false;
+  group.add(sky);
+
+  // ---- distant skyline silhouettes (fog does the atmospheric fade)
+  const bGeo = new THREE.BoxGeometry(1, 1, 1);
+  bGeo.translate(0, 0.5, 0);
+  const nBld = 90;
+  const skyline = new THREE.InstancedMesh(bGeo, toon(th.edge === 'water' ? '#5d7590' : '#6b6670'), nBld);
+  for (let i = 0; i < nBld; i++) {
+    const side = i % 2 === 0 ? -1 : 1;
+    const hgt = 12 + Math.pow(Math.random(), 2) * 55;
+    m.compose(
+      new THREE.Vector3(side * (110 + Math.random() * 70), -3, z0 + Math.random() * len + 60),
+      new THREE.Quaternion(),
+      new THREE.Vector3(8 + Math.random() * 14, hgt, 8 + Math.random() * 14),
+    );
+    skyline.setMatrixAt(i, m);
+  }
+  group.add(skyline);
+
+  // ---- suspension bridge: towers, catenary main cables, suspenders
+  if (th.edge === 'water') {
+    const towerMat = toon('#c9503c');
+    const span = 140;
+    const towerH = 26;
+    const towers: number[] = [];
+    for (let z = z0 + 30; z < z1; z += span) towers.push(z);
+    for (const tz of towers) {
+      for (const sx of [-1, 1]) {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(1.1, towerH, 1.4), towerMat);
+        leg.position.set(sx * (half + 2.6), towerH / 2 - 1, tz);
+        leg.castShadow = true;
+        group.add(leg);
+      }
+      for (const y of [towerH * 0.55, towerH - 2]) {
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(roadWidth + 6.4, 1.0, 1.2), towerMat);
+        beam.position.set(0, y, tz);
+        group.add(beam);
+      }
+    }
+    const cableMat = toon('#b8483a');
+    const suspGeo = new THREE.CylinderGeometry(0.035, 0.035, 1, 4);
+    suspGeo.translate(0, 0.5, 0);
+    const susp: THREE.Matrix4[] = [];
+    for (let i = 0; i + 1 < towers.length + 1; i++) {
+      const za = towers[i] ?? towers[towers.length - 1];
+      const zb = towers[i + 1] ?? za + span;
+      for (const sx of [-1, 1]) {
+        const x = sx * (half + 2.6);
+        const pts: THREE.Vector3[] = [];
+        for (let k2 = 0; k2 <= 24; k2++) {
+          const t = k2 / 24;
+          const y = towerH - 2 - Math.sin(Math.PI * t) * (towerH - 5);
+          pts.push(new THREE.Vector3(x, y, za + (zb - za) * t));
+          if (k2 > 0 && k2 < 24 && k2 % 2 === 0) susp.push(new THREE.Matrix4().compose(new THREE.Vector3(x, 0.8, za + (zb - za) * t), new THREE.Quaternion(), new THREE.Vector3(1, y - 0.8, 1)));
+        }
+        group.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 48, 0.16, 5), cableMat));
+      }
+    }
+    const suspMesh = new THREE.InstancedMesh(suspGeo, cableMat, susp.length);
+    susp.forEach((mm, i) => suspMesh.setMatrixAt(i, mm));
+    group.add(suspMesh);
+  }
+
   return {
     group,
-    update(t) {
+    update(t, camZ) {
+      sky.position.set(0, 0, camZ);
       waterMat.uniforms.uTime.value = t;
     },
   };

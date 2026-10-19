@@ -34,6 +34,8 @@ export class App {
   private result: LevelResult | null = null;
   private current: { map: MapDef; level: LevelDef } | null = null;
   private fps = { frames: 0, t: 0, value: 60, el: null as HTMLDivElement | null };
+  /** adaptive quality: smoothed frame ms + how long it has been over budget */
+  private perf = { ema: 16, over: 0, forced: false };
 
   constructor(root: HTMLElement, private cfg: GameConfig) {
     root.innerHTML = '';
@@ -63,6 +65,9 @@ export class App {
   async start(): Promise<void> {
     await this.save.load();
     this.haptics.enabled = this.save.data.settings.haptics;
+    const q = new URLSearchParams(location.search).get('q');
+    this.perf.forced = q !== null;
+    this.renderer.setQuality(q !== null ? Number(q) : (this.save.data.settings.quality ?? 3));
     this.buildHud();
     const params = new URLSearchParams(location.search);
     const direct = params.get('level');
@@ -92,7 +97,10 @@ export class App {
     const dt = Math.min(0.1, (t - this.last) / 1000);
     this.last = t;
     if (this.session) this.session.frame(dt);
-    if (this.screen === 'play') this.updateHud();
+    if (this.screen === 'play') {
+      this.updateHud();
+      this.adaptQuality(dt);
+    }
     if (this.fps.el) {
       this.fps.frames++;
       this.fps.t += dt;
@@ -102,10 +110,25 @@ export class App {
         this.fps.t = 0;
         const b = this.session?.battle;
         const st = this.renderer.stats;
-        this.fps.el.textContent = `${this.fps.value} fps · crew ${b?.crewCount ?? 0} · enemies ${b ? b.level.hordes.reduce((s, h) => s + Math.max(0, h.alive), 0) : 0} · sim ${(this.session?.simMs ?? 0).toFixed(1)}ms · scene ${st.updateMs.toFixed(1)}ms · gl ${st.renderMs.toFixed(1)}ms`;
+        this.fps.el.textContent = `${this.fps.value} fps · q${this.renderer.quality} · crew ${b?.crewCount ?? 0} · enemies ${b ? b.level.hordes.reduce((s, h) => s + Math.max(0, h.alive), 0) : 0} · sim ${(this.session?.simMs ?? 0).toFixed(1)}ms · scene ${st.updateMs.toFixed(1)}ms · gl ${st.renderMs.toFixed(1)}ms`;
       }
     }
     requestAnimationFrame((tt) => this.loop(tt));
+  }
+
+  /** Step quality down when frames stay slow; remembered per device in the save. */
+  private adaptQuality(dt: number): void {
+    const r = this.cfg.game.render;
+    this.perf.ema += (dt * 1000 - this.perf.ema) * 0.05;
+    if (this.perf.forced || this.renderer.quality === 0) return;
+    this.perf.over = this.perf.ema > r.adaptiveFrameMs ? this.perf.over + dt : 0;
+    if (this.perf.over > r.adaptiveWindowSec) {
+      this.perf.over = 0;
+      this.perf.ema = 16;
+      this.renderer.setQuality(this.renderer.quality - 1);
+      this.save.data.settings.quality = this.renderer.quality;
+      void this.save.save();
+    }
   }
 
   // ------------------------------------------------------------------ HUD

@@ -18,7 +18,7 @@ npx tsx scripts/balance.ts [mode] [seed]   # pacing report per level (autoplay b
 
 Dev URL params: `?level=N` jump into a level · `&auto` bot plays · `&skip=S`
 fast-forward S seconds · `&seed=N` · `?stress` 500 crew vs 1,500 enemies ·
-`&fps` frame cost overlay (sim / scene update / GL submit).
+`&fps` frame cost overlay (sim / scene update / GL submit) · `&q=0..3` quality tier.
 
 ## Architecture
 
@@ -56,6 +56,21 @@ tests/         vitest suites
 - **Squad fire** is aggregated: shots per tick = crew × rate × sustain (mag vs
   reload), capped at `sim.maxShotsPerTick` with damage scaled to match, so
   500 crew cost the same as 50. The leader fires discrete shots with a real mag.
+- **3D animation.** Characters are procedural rigged humanoids (`render/rig.ts`):
+  rounded low-poly parts skinned to a 15-bone skeleton, with keyframed clips
+  (run, aim, shoot recoil, knockdown fall, cheer; boss idle, slam windup/smash,
+  shield raise, roar, topple). The leader and bosses are `SkinnedMesh`es driven
+  by an `AnimationMixer` with crossfades. Crowds bake those same clips into
+  vertex animation textures (`render/vat.ts`), so every instance plays a
+  real skeletal animation from the GPU with its own clip and phase.
+- **Look.** Toon shading with rim light, ACES tone mapping, soft directional
+  shadows for leader/boss/props, instanced blob shadows for crowds, bloom on
+  muzzle flashes and light bars, sky dome with a hazy sun, and suspension-bridge
+  towers, cables and skyline on Freeway Bridge.
+- **LOD + adaptive quality.** 3 crowd LODs (≈2,150 / 590 / 420 verts) with a
+  per-frame cap on full-detail units. Quality tiers step down automatically
+  when frames run long (bloom → shadows → resolution → LOD range), the chosen
+  tier is saved per device, and `?q=0..3` forces one.
 - **Art swap.** `config/assets.json` maps logical ids to a model URL or a
   procedural placeholder. Phase 1 uses placeholders only.
 
@@ -95,6 +110,12 @@ generated into `/schemas`.
 5. **Readability:** crowd units clipped through barrels, and the leader's HP was invisible once the crew was gone. Units are now nudged out of obstacle footprints, and a leader HP bar appears under the crew count.
 
 **Measured (headless Chromium, software GL):** at 500 crew vs 1,500 enemies, the sim takes ~1.1 ms per frame and the scene update ~1.4 ms. GPU cost has to be confirmed on a real mid-range Android device (`?stress&fps`), and that is the first item for Phase 2.
+
+### Visual upgrade: rigged 3D characters + animation ✅
+Replaced the box characters and shader leg-swing with skinned, keyframe-animated
+characters (above). Downed units now play a knockdown and sink away (no gore),
+the crew switches between run / shooting stance / cheer with the battle phase,
+and Big Sarge winds up, slams, raises his shield, roars on enrage and topples.
 
 ### Next: Phase 2
 Faction / Character / Battle Mode / Map select screens, the Blue faction, VS Rival

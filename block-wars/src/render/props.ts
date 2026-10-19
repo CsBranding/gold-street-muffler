@@ -1,8 +1,9 @@
 /** Low-poly obstacle props. Built at runtime; swapped for real art via assets.json. */
 import * as THREE from 'three';
 import type { ObstacleRT } from '../sim/world';
+import { toonGradient } from './vat';
 
-const lam = (c: string) => new THREE.MeshLambertMaterial({ color: c });
+const lam = (c: string) => new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient() });
 const M = {
   wood: lam('#a0602e'),
   woodDark: lam('#6e3d1a'),
@@ -12,8 +13,9 @@ const M = {
   black: lam('#121317'),
   white: lam('#f0f0f0'),
   glass: lam('#2b3a4f'),
-  red: new THREE.MeshBasicMaterial({ color: '#ff2a3a' }),
-  blue: new THREE.MeshBasicMaterial({ color: '#2a7bff' }),
+  // over-bright so the bloom pass makes the light bars glow
+  red: new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2a3a').multiplyScalar(3) }),
+  blue: new THREE.MeshBasicMaterial({ color: new THREE.Color('#2a7bff').multiplyScalar(3) }),
   metal: lam('#9aa0a8'),
 };
 
@@ -100,6 +102,9 @@ export function buildProp(o: ObstacleRT, factionColor: string): THREE.Group {
       break;
     }
   }
+  g.traverse((m) => {
+    if ((m as THREE.Mesh).isMesh) m.castShadow = m.receiveShadow = true;
+  });
   g.position.set(o.x, 0, o.z);
   return g;
 }

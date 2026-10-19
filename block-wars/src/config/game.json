@@ -77,12 +77,12 @@
     "slowMoScale": 0.25
   },
   "camera": {
-    "fov": 52,
-    "height": 13,
-    "back": 10.5,
-    "lookAhead": 9,
-    "zoomPerSqrtCrew": 0.045,
-    "maxZoom": 1.6,
+    "fov": 50,
+    "height": 8.6,
+    "back": 9.2,
+    "lookAhead": 8,
+    "zoomPerSqrtCrew": 0.065,
+    "maxZoom": 1.95,
     "followLerp": 0.12,
     "bossPushIn": 0.55
   },
@@ -96,10 +96,21 @@
     "tracerLife": 0.13,
     "damageNumberLife": 0.7,
     "pixelRatioCap": 2,
-    "shadows": false,
-    "lodDistance": 24,
+    "shadows": true,
+    "lodDistance": 22,
     "maxDamageNumbersPerFlush": 6,
-    "tracerWidth": 0.1
+    "tracerWidth": 0.1,
+    "shadowMapSize": 1024,
+    "exposure": 0.82,
+    "bloom": true,
+    "bloomStrength": 0.6,
+    "bloomThreshold": 0.95,
+    "maxCorpses": 120,
+    "corpseLife": 2.4,
+    "farDistance": 50,
+    "maxHiInstances": 140,
+    "adaptiveFrameMs": 22,
+    "adaptiveWindowSec": 2
   },
   "input": {
     "dragMetersPerScreen": 13

@@ -469,10 +469,25 @@ export const GameFileSchema = z.object({
     tracerWidth: pos,
     /** units farther than this from the camera use the low-detail mesh */
     lodDistance: pos,
+    /** beyond this distance from the camera units use the cheapest LOD */
+    farDistance: pos,
+    /** cap on full-detail units per outfit per frame (big crews trail toward the camera) */
+    maxHiInstances: z.number().int().positive(),
+    /** adaptive quality: step down when the smoothed frame time stays above this (ms) */
+    adaptiveFrameMs: pos,
+    adaptiveWindowSec: pos,
     maxDamageNumbersPerFlush: z.number().int().positive(),
     damageNumberLife: pos,
     pixelRatioCap: pos,
     shadows: z.boolean(),
+    shadowMapSize: z.number().int().positive(),
+    exposure: pos,
+    bloom: z.boolean(),
+    bloomStrength: nonNeg,
+    bloomThreshold: nonNeg,
+    /** knocked-down bodies per unit type before recycling */
+    maxCorpses: z.number().int().positive(),
+    corpseLife: pos,
   }),
   input: z.object({ dragMetersPerScreen: pos }),
   rarityColors: z.object({ common: hex, rare: hex, epic: hex, legendary: hex }),
