@@ -65,6 +65,11 @@ export function parseConfig(raw: Record<keyof GameConfig, unknown>): GameConfig 
   for (const c of cfg.characters.characters) {
     if (!weaponIds.has(c.primaryWeaponId)) errors.push(`character ${c.id} weapon ${c.primaryWeaponId} unknown`);
   }
+  for (const e of cfg.enemies.enemies)
+    if (e.counterpartId && !enemyIds.has(e.counterpartId)) errors.push(`enemy ${e.id} counterpart ${e.counterpartId} unknown`);
+  const ab = cfg.levels.autoBoss;
+  if (!bossIds.has(ab.finalBossId)) errors.push(`levels.autoBoss.finalBossId ${ab.finalBossId} unknown`);
+  if (!bossIds.has(ab.rivalMiniBossId)) errors.push(`levels.autoBoss.rivalMiniBossId ${ab.rivalMiniBossId} unknown`);
   for (const b of cfg.bosses.bosses)
     for (const a of b.attacks)
       for (const s of a.spawn) if (!enemyIds.has(s.enemyId)) errors.push(`boss ${b.id} spawns unknown ${s.enemyId}`);

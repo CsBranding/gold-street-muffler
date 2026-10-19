@@ -4,6 +4,11 @@
   "growthPerLevel": 0.12,
   "mapStep": 0.35
  },
+ "autoBoss": {
+  "finalBossId": "big_sarge",
+  "rivalMiniBossId": "big_homie",
+  "rivalMiniBossLevel": 5
+ },
  "maps": [
   {
    "id": "freeway_bridge",
@@ -40,14 +45,14 @@
      "segments": [
       {
        "kind": "gap",
-       "length": 10
+       "length": 12
       },
       {
        "kind": "lanes",
-       "length": 52,
+       "length": 56,
        "lanes": [
         {
-         "barricadeHp": 3,
+         "barricadeHp": 30,
          "items": [
           {
            "type": "gate",
@@ -144,15 +149,31 @@
             "op": "add",
             "value": 1
            }
+          },
+          {
+           "type": "gate",
+           "at": 46.400000000000006,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 49.6,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
           }
          ]
         },
         {
-         "barricadeHp": 8,
+         "barricadeHp": 90,
          "items": [
           {
            "type": "gate",
-           "at": 10,
+           "at": 8,
            "gate": {
             "op": "add",
             "value": 5
@@ -160,9 +181,9 @@
           },
           {
            "type": "obstacle",
-           "at": 22,
+           "at": 20,
            "kind": "barrel",
-           "hp": 40,
+           "hp": 260,
            "rarity": "rare",
            "reward": {
             "kind": "weapon",
@@ -171,7 +192,15 @@
           },
           {
            "type": "gate",
-           "at": 36,
+           "at": 34,
+           "gate": {
+            "op": "add",
+            "value": 5
+           }
+          },
+          {
+           "type": "gate",
+           "at": 46,
            "gate": {
             "op": "add",
             "value": 5
@@ -180,7 +209,7 @@
          ]
         },
         {
-         "barricadeHp": 3,
+         "barricadeHp": 30,
          "items": [
           {
            "type": "gate",
@@ -200,7 +229,7 @@
           },
           {
            "type": "gate",
-           "at": 38,
+           "at": 40,
            "gate": {
             "op": "mul",
             "value": 2
@@ -216,7 +245,7 @@
       },
       {
        "kind": "gates",
-       "length": 46,
+       "length": 44,
        "rows": [
         {
          "at": 0,
@@ -265,7 +294,7 @@
        "items": [
         {
          "kind": "barrel",
-         "hp": 30,
+         "hp": 500,
          "x": -0.55,
          "at": 4,
          "rarity": "common",
@@ -276,7 +305,7 @@
         },
         {
          "kind": "barrel",
-         "hp": 50,
+         "hp": 800,
          "x": 0.55,
          "at": 4,
          "rarity": "rare",
@@ -287,7 +316,7 @@
         },
         {
          "kind": "crate",
-         "hp": 70,
+         "hp": 900,
          "x": 0,
          "at": 20,
          "rarity": "common",
@@ -306,7 +335,66 @@
        "enemies": [
         {
          "enemyId": "patrol_officer",
-         "count": 45
+         "count": 150
+        }
+       ],
+       "pickups": []
+      },
+      {
+       "kind": "gates",
+       "length": 24,
+       "rows": [
+        {
+         "at": 0,
+         "gates": [
+          {
+           "op": "add",
+           "value": 15
+          },
+          {
+           "op": "mul",
+           "value": 2
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "obstacles",
+       "length": 28,
+       "items": [
+        {
+         "kind": "barrel",
+         "hp": 900,
+         "x": -0.5,
+         "at": 4,
+         "rarity": "rare",
+         "reward": {
+          "kind": "recruits",
+          "count": 12
+         }
+        },
+        {
+         "kind": "crate",
+         "hp": 1200,
+         "x": 0.5,
+         "at": 4,
+         "rarity": "epic",
+         "reward": {
+          "kind": "armor_vest"
+         }
+        }
+       ]
+      },
+      {
+       "kind": "horde",
+       "length": 40,
+       "side": "enemy",
+       "columns": 12,
+       "enemies": [
+        {
+         "enemyId": "patrol_officer",
+         "count": 300
         }
        ],
        "pickups": []
@@ -326,14 +414,14 @@
      "segments": [
       {
        "kind": "gap",
-       "length": 10
+       "length": 12
       },
       {
        "kind": "lanes",
-       "length": 56,
+       "length": 58,
        "lanes": [
         {
-         "barricadeHp": 4,
+         "barricadeHp": 40,
          "items": [
           {
            "type": "gate",
@@ -446,17 +534,33 @@
             "op": "add",
             "value": 1
            }
+          },
+          {
+           "type": "gate",
+           "at": 52.800000000000004,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
           }
          ]
         },
         {
-         "barricadeHp": 12,
+         "barricadeHp": 110,
          "items": [
           {
+           "type": "gate",
+           "at": 8,
+           "gate": {
+            "op": "add",
+            "value": 4
+           }
+          },
+          {
            "type": "obstacle",
-           "at": 12,
+           "at": 18,
            "kind": "barrel",
-           "hp": 60,
+           "hp": 260,
            "rarity": "rare",
            "reward": {
             "kind": "weapon",
@@ -465,7 +569,7 @@
           },
           {
            "type": "gate",
-           "at": 30,
+           "at": 32,
            "gate": {
             "op": "add",
             "value": 6
@@ -473,7 +577,7 @@
           },
           {
            "type": "gate",
-           "at": 42,
+           "at": 46,
            "gate": {
             "op": "mul",
             "value": 2
@@ -513,7 +617,7 @@
          "gates": [
           {
            "op": "mul",
-           "value": 3
+           "value": 2
           },
           {
            "op": "div",
@@ -543,12 +647,12 @@
        "columns": 10,
        "enemies": [
         {
-         "enemyId": "patrol_officer",
-         "count": 40
+         "enemyId": "riot_cop",
+         "count": 20
         },
         {
-         "enemyId": "riot_cop",
-         "count": 10
+         "enemyId": "patrol_officer",
+         "count": 150
         }
        ],
        "pickups": [
@@ -568,7 +672,7 @@
        "items": [
         {
          "kind": "dumpster",
-         "hp": 90,
+         "hp": 1400,
          "x": -0.6,
          "at": 4,
          "rarity": "rare",
@@ -579,7 +683,7 @@
         },
         {
          "kind": "barrel",
-         "hp": 60,
+         "hp": 1100,
          "x": 0.6,
          "at": 4,
          "rarity": "epic",
@@ -589,7 +693,7 @@
         },
         {
          "kind": "barrel",
-         "hp": 50,
+         "hp": 900,
          "x": 0,
          "at": 20,
          "rarity": "rare",
@@ -601,18 +705,69 @@
        ]
       },
       {
-       "kind": "horde",
-       "length": 40,
-       "side": "enemy",
-       "columns": 11,
-       "enemies": [
+       "kind": "gates",
+       "length": 24,
+       "rows": [
         {
-         "enemyId": "patrol_officer",
-         "count": 60
+         "at": 0,
+         "gates": [
+          {
+           "op": "add",
+           "value": 20
+          },
+          {
+           "op": "mul",
+           "value": 2
+          },
+          {
+           "op": "sub",
+           "value": 15
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "obstacles",
+       "length": 30,
+       "items": [
+        {
+         "kind": "crate",
+         "hp": 1800,
+         "x": -0.5,
+         "at": 4,
+         "rarity": "rare",
+         "reward": {
+          "kind": "recruits",
+          "count": 15
+         }
         },
         {
+         "kind": "dumpster",
+         "hp": 2200,
+         "x": 0.5,
+         "at": 4,
+         "rarity": "epic",
+         "reward": {
+          "kind": "weapon_level",
+          "levels": 1
+         }
+        }
+       ]
+      },
+      {
+       "kind": "horde",
+       "length": 44,
+       "side": "enemy",
+       "columns": 13,
+       "enemies": [
+        {
          "enemyId": "riot_cop",
-         "count": 14
+         "count": 40
+        },
+        {
+         "enemyId": "patrol_officer",
+         "count": 380
         }
        ],
        "pickups": []
@@ -632,14 +787,14 @@
      "segments": [
       {
        "kind": "gap",
-       "length": 10
+       "length": 12
       },
       {
        "kind": "lanes",
-       "length": 56,
+       "length": 58,
        "lanes": [
         {
-         "barricadeHp": 5,
+         "barricadeHp": 50,
          "items": [
           {
            "type": "gate",
@@ -662,12 +817,12 @@
            "at": 28,
            "gate": {
             "op": "sub",
-            "value": 10
+            "value": 8
            }
           },
           {
            "type": "gate",
-           "at": 40,
+           "at": 42,
            "gate": {
             "op": "mul",
             "value": 3
@@ -676,13 +831,21 @@
          ]
         },
         {
-         "barricadeHp": 16,
+         "barricadeHp": 120,
          "items": [
           {
+           "type": "gate",
+           "at": 6,
+           "gate": {
+            "op": "add",
+            "value": 5
+           }
+          },
+          {
            "type": "obstacle",
-           "at": 10,
+           "at": 14,
            "kind": "crate",
-           "hp": 80,
+           "hp": 260,
            "rarity": "epic",
            "reward": {
             "kind": "weapon",
@@ -699,7 +862,7 @@
           },
           {
            "type": "gate",
-           "at": 42,
+           "at": 44,
            "gate": {
             "op": "add",
             "value": 8
@@ -708,7 +871,7 @@
          ]
         },
         {
-         "barricadeHp": 5,
+         "barricadeHp": 50,
          "items": [
           {
            "type": "gate",
@@ -817,6 +980,14 @@
           {
            "type": "gate",
            "at": 49.6,
+           "gate": {
+            "op": "add",
+            "value": 1
+           }
+          },
+          {
+           "type": "gate",
+           "at": 52.800000000000004,
            "gate": {
             "op": "add",
             "value": 1
@@ -874,11 +1045,11 @@
        "enemies": [
         {
          "enemyId": "riot_cop",
-         "count": 22
+         "count": 30
         },
         {
          "enemyId": "patrol_officer",
-         "count": 55
+         "count": 170
         }
        ],
        "pickups": []
@@ -889,7 +1060,7 @@
        "items": [
         {
          "kind": "cruiser",
-         "hp": 140,
+         "hp": 1800,
          "x": -0.6,
          "at": 4,
          "rarity": "epic",
@@ -900,7 +1071,7 @@
         },
         {
          "kind": "barrel",
-         "hp": 70,
+         "hp": 1300,
          "x": 0.6,
          "at": 4,
          "rarity": "rare",
@@ -911,7 +1082,7 @@
         },
         {
          "kind": "crate",
-         "hp": 90,
+         "hp": 1600,
          "x": 0,
          "at": 22,
          "rarity": "legendary",
@@ -925,7 +1096,7 @@
       },
       {
        "kind": "gates",
-       "length": 20,
+       "length": 22,
        "rows": [
         {
          "at": 0,
@@ -944,17 +1115,17 @@
       },
       {
        "kind": "horde",
-       "length": 40,
+       "length": 44,
        "side": "enemy",
-       "columns": 12,
+       "columns": 13,
        "enemies": [
         {
-         "enemyId": "patrol_officer",
-         "count": 80
+         "enemyId": "riot_cop",
+         "count": 36
         },
         {
-         "enemyId": "riot_cop",
-         "count": 20
+         "enemyId": "patrol_officer",
+         "count": 300
         }
        ],
        "pickups": []
@@ -974,14 +1145,14 @@
      "segments": [
       {
        "kind": "gap",
-       "length": 10
+       "length": 12
       },
       {
        "kind": "lanes",
-       "length": 52,
+       "length": 54,
        "lanes": [
         {
-         "barricadeHp": 5,
+         "barricadeHp": 60,
          "items": [
           {
            "type": "gate",
@@ -1078,17 +1249,25 @@
             "op": "add",
             "value": 2
            }
+          },
+          {
+           "type": "gate",
+           "at": 48.8,
+           "gate": {
+            "op": "add",
+            "value": 2
+           }
           }
          ]
         },
         {
-         "barricadeHp": 14,
+         "barricadeHp": 120,
          "items": [
           {
            "type": "obstacle",
            "at": 10,
            "kind": "barrel",
-           "hp": 70,
+           "hp": 260,
            "rarity": "epic",
            "reward": {
             "kind": "weapon",
@@ -1105,7 +1284,7 @@
           },
           {
            "type": "gate",
-           "at": 42,
+           "at": 44,
            "gate": {
             "op": "add",
             "value": 10
@@ -1114,7 +1293,7 @@
          ]
         },
         {
-         "barricadeHp": 5,
+         "barricadeHp": 60,
          "items": [
           {
            "type": "gate",
@@ -1134,7 +1313,7 @@
           },
           {
            "type": "gate",
-           "at": 40,
+           "at": 42,
            "gate": {
             "op": "mul",
             "value": 3
@@ -1186,7 +1365,7 @@
        "items": [
         {
          "kind": "barrel",
-         "hp": 70,
+         "hp": 1200,
          "x": -0.6,
          "at": 4,
          "rarity": "rare",
@@ -1196,7 +1375,7 @@
         },
         {
          "kind": "barrel",
-         "hp": 80,
+         "hp": 1400,
          "x": 0.6,
          "at": 4,
          "rarity": "epic",
@@ -1206,7 +1385,7 @@
         },
         {
          "kind": "crate",
-         "hp": 80,
+         "hp": 1500,
          "x": 0,
          "at": 18,
          "rarity": "rare",
@@ -1224,15 +1403,34 @@
        "columns": 11,
        "enemies": [
         {
-         "enemyId": "patrol_officer",
-         "count": 50
+         "enemyId": "riot_cop",
+         "count": 8
         },
         {
-         "enemyId": "riot_cop",
-         "count": 14
+         "enemyId": "patrol_officer",
+         "count": 40
         }
        ],
        "pickups": []
+      },
+      {
+       "kind": "gates",
+       "length": 22,
+       "rows": [
+        {
+         "at": 0,
+         "gates": [
+          {
+           "op": "add",
+           "value": 30
+          },
+          {
+           "op": "mul",
+           "value": 2
+          }
+         ]
+        }
+       ]
       },
       {
        "kind": "boss",

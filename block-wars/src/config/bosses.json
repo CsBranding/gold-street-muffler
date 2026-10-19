@@ -6,7 +6,7 @@
       "displayName": "BIG SARGE",
       "side": "police",
       "heightMultOfCrew": 6,
-      "baseHp": 9000,
+      "baseHp": 26000,
       "attacks": [
         {
           "id": "baton_slam",
@@ -14,7 +14,7 @@
           "weight": 3,
           "telegraphSec": 1.0,
           "cooldownSec": 4,
-          "radius": 2.6,
+          "radius": 2.7,
           "durationSec": 0,
           "dps": 0,
           "minUnits": 0,
@@ -46,7 +46,7 @@
           "weight": 2,
           "telegraphSec": 1.1,
           "cooldownSec": 7,
-          "radius": 2.2,
+          "radius": 2.5,
           "durationSec": 0,
           "dps": 0,
           "minUnits": 10,
@@ -70,7 +70,7 @@
           "spawn": [
             {
               "enemyId": "patrol_officer",
-              "count": 24
+              "count": 36
             },
             {
               "enemyId": "cruiser_barricade",
@@ -112,14 +112,15 @@
       "standoffM": 16,
       "contactDps": 80,
       "cash": 250,
-      "lootBurst": 40
+      "lootBurst": 40,
+      "trackSpeed": 0.8
     },
     {
       "id": "big_homie",
       "displayName": "BIG HOMIE",
       "side": "rival",
       "heightMultOfCrew": 4,
-      "baseHp": 5000,
+      "baseHp": 15000,
       "attacks": [
         {
           "id": "drum_spray",
@@ -189,7 +190,8 @@
       "standoffM": 14,
       "contactDps": 60,
       "cash": 150,
-      "lootBurst": 25
+      "lootBurst": 25,
+      "trackSpeed": 1.2
     }
   ]
 }

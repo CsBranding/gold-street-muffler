@@ -171,6 +171,8 @@ export const EnemySchema = z.object({
     .optional(),
   /** cash dropped per kill */
   cash: nonNeg,
+  /** equivalent unit on the other side (police <-> rival) used by battle modes */
+  counterpartId: id.nullable(),
 });
 export const EnemiesFileSchema = z.object({
   version: z.literal(SCHEMA_VERSION),
@@ -210,6 +212,8 @@ export const BossSchema = z.object({
   weakPoint: z.object({ chance: frac, mult: pos, onlyWhenShieldDown: z.boolean() }),
   /** crew lateral offset needed to flank the shield */
   flankOffsetM: pos,
+  /** lateral tracking speed toward the crew (m/s); frozen while shielding */
+  trackSpeed: nonNeg,
   standoffM: pos,
   contactDps: nonNeg,
   cash: nonNeg,
@@ -332,6 +336,8 @@ export const LevelsFileSchema = z.object({
     /** extra multiplier per map in unlock order */
     mapStep: nonNeg,
   }),
+  /** how `bossId: "auto"` resolves */
+  autoBoss: z.object({ finalBossId: id, rivalMiniBossId: id, rivalMiniBossLevel: z.number().int().min(1).max(10) }),
   maps: z.array(MapSchema).min(1),
 });
 
@@ -398,6 +404,11 @@ export const GameFileSchema = z.object({
     gateDepth: pos,
     obstacleDepth: pos,
     barricadeDepth: pos,
+    obstacleHalfWidth: z.object({ barrel: pos, crate: pos, dumpster: pos, cruiser: pos }),
+    /** banner lead distance before a segment starts */
+    bannerLead: nonNeg,
+    /** distance from horde segment start to the horde's front row */
+    hordeOffset: nonNeg,
   }),
   crowd: z.object({
     runSpeed: pos,
@@ -412,6 +423,11 @@ export const GameFileSchema = z.object({
     engageRange: pos,
     leaderScale: pos,
     maxCrew: z.number().int().positive(),
+    reviveInvulnSec: nonNeg,
+    /** extra target score per meter a target sits outside the crowd's width */
+    lateralTargetPenalty: nonNeg,
+    /** half-angle of the forward targeting cone */
+    targetConeDeg: z.number().min(1).max(89),
     startCrew: z.number().int().min(0),
     squadStartWeaponId: id,
   }),
@@ -420,6 +436,8 @@ export const GameFileSchema = z.object({
     aggroRange: pos,
     pushThreshold: pos,
     flankDistance: nonNeg,
+    pickupDriftSpeed: nonNeg,
+    pushbackOnRevive: nonNeg,
   }),
   pickups: z.object({
     armorUnitHpMult: pos,

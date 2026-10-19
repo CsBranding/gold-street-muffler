@@ -13,10 +13,18 @@
     "laneWallHeight": 0.6,
     "gateDepth": 0.4,
     "obstacleDepth": 1.2,
-    "barricadeDepth": 0.8
+    "barricadeDepth": 0.8,
+    "obstacleHalfWidth": {
+      "barrel": 0.75,
+      "crate": 0.85,
+      "dumpster": 1.25,
+      "cruiser": 1.35
+    },
+    "bannerLead": 10,
+    "hordeOffset": 22
   },
   "crowd": {
-    "runSpeed": 7.5,
+    "runSpeed": 6.0,
     "chargeSpeed": 6,
     "steerSpeed": 11,
     "spacing": 0.36,
@@ -29,23 +37,45 @@
     "leaderScale": 1.35,
     "maxCrew": 999,
     "startCrew": 0,
-    "squadStartWeaponId": "pistol_9"
+    "squadStartWeaponId": "pistol_9",
+    "reviveInvulnSec": 2.0,
+    "lateralTargetPenalty": 2.5,
+    "targetConeDeg": 40
   },
   "horde": {
     "spacing": 0.62,
     "aggroRange": 30,
     "pushThreshold": 1.0,
-    "flankDistance": 1.6
+    "flankDistance": 1.6,
+    "pickupDriftSpeed": 3,
+    "pushbackOnRevive": 8
   },
   "pickups": {
     "armorUnitHpMult": 1.5,
     "armorLeaderReduction": 0.25,
     "drumMagMult": 2,
-    "lowrider": { "durationSec": 5, "speedMult": 1.8, "damageMult": 1.6 },
-    "dirtBike": { "durationSec": 2.5, "speedMult": 2.4, "invulnerable": true },
-    "rarityLootMult": { "common": 1, "rare": 1.5, "epic": 2.25, "legendary": 3.5 }
+    "lowrider": {
+      "durationSec": 5,
+      "speedMult": 1.8,
+      "damageMult": 1.6
+    },
+    "dirtBike": {
+      "durationSec": 2.5,
+      "speedMult": 2.4,
+      "invulnerable": true
+    },
+    "rarityLootMult": {
+      "common": 1,
+      "rare": 1.5,
+      "epic": 2.25,
+      "legendary": 3.5
+    }
   },
-  "boss": { "arenaLength": 46, "slowMoSec": 1.6, "slowMoScale": 0.25 },
+  "boss": {
+    "arenaLength": 46,
+    "slowMoSec": 1.6,
+    "slowMoScale": 0.25
+  },
   "camera": {
     "fov": 52,
     "height": 13,
@@ -68,9 +98,19 @@
     "pixelRatioCap": 2,
     "shadows": false
   },
-  "input": { "dragMetersPerScreen": 13 },
-  "rarityColors": { "common": "#3ee26b", "rare": "#3aa0ff", "epic": "#b45cff", "legendary": "#ffc61a" },
-  "gateColors": { "negative": "#3a3d44", "negativeText": "#ff6060" },
+  "input": {
+    "dragMetersPerScreen": 13
+  },
+  "rarityColors": {
+    "common": "#3ee26b",
+    "rare": "#3aa0ff",
+    "epic": "#b45cff",
+    "legendary": "#ffc61a"
+  },
+  "gateColors": {
+    "negative": "#3a3d44",
+    "negativeText": "#ff6060"
+  },
   "banners": {
     "durationSec": 1.8,
     "text": {
@@ -85,5 +125,7 @@
       "enrage": "HE'S MAD NOW"
     }
   },
-  "runCap": { "maxLevelSec": 120 }
+  "runCap": {
+    "maxLevelSec": 120
+  }
 }
