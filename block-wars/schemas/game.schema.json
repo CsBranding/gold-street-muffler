@@ -239,6 +239,10 @@
           "type": "number",
           "minimum": 0
         },
+        "rooftopHeight": {
+          "type": "number",
+          "minimum": 0
+        },
         "pushbackOnRevive": {
           "type": "number",
           "minimum": 0
@@ -250,6 +254,7 @@
         "pushThreshold",
         "flankDistance",
         "pickupDriftSpeed",
+        "rooftopHeight",
         "pushbackOnRevive"
       ],
       "additionalProperties": false
@@ -692,6 +697,59 @@
       ],
       "additionalProperties": false
     },
+    "allOut": {
+      "type": "object",
+      "properties": {
+        "infightMult": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "bossRivalCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "bossDamageMult": {
+          "type": "number",
+          "minimum": 0
+        },
+        "focusPenalty": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "infightMult",
+        "bossRivalCount",
+        "bossDamageMult",
+        "focusPenalty"
+      ],
+      "additionalProperties": false
+    },
+    "hazards": {
+      "type": "object",
+      "properties": {
+        "spotlightWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "spotlightSweepSpeed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "driveBySpeed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "spotlightWidth",
+        "spotlightSweepSpeed",
+        "driveBySpeed"
+      ],
+      "additionalProperties": false
+    },
     "audio": {
       "type": "object",
       "properties": {
@@ -803,6 +861,8 @@
     "gateColors",
     "banners",
     "runCap",
+    "allOut",
+    "hazards",
     "audio",
     "feel",
     "flow"

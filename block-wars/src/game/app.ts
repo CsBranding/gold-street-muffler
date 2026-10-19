@@ -3,8 +3,10 @@
  * → Play → Results → Hub. Faction/character/mode select arrive in Phase 2
  * and plug into `save.data.selection`.
  */
-import type { GameConfig, LevelDef, MapDef } from '../schema/types';
+import type { BattleMode, Character, FactionId, GameConfig, LevelDef, MapDef } from '../schema/types';
 import { BattleRenderer, rewardText } from '../render/BattleRenderer';
+import { CharacterPreview } from '../render/preview';
+import { lookFromOutfit, type Look } from '../render/rig';
 import { MockAdService, type AdService } from '../services/ads';
 import { AudioService } from '../services/audio';
 import { Haptics } from '../services/haptics';
@@ -16,7 +18,7 @@ import { drawPortrait } from '../ui/portrait';
 import { computeResult, type LevelResult } from './results';
 import { GameSession } from './session';
 
-type Screen = 'splash' | 'hub' | 'play' | 'results';
+type Screen = 'splash' | 'hub' | 'play' | 'results' | 'select';
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
@@ -31,6 +33,7 @@ export class App {
   private haptics = new Haptics();
   private audio: AudioService;
   private session: GameSession | null = null;
+  private preview: CharacterPreview | null = null;
   private screen: Screen = 'splash';
   private last = performance.now();
   private result: LevelResult | null = null;
@@ -80,6 +83,14 @@ export class App {
     this.buildHud();
     const params = new URLSearchParams(location.search);
     const direct = params.get('level');
+    const pm = params.get('mode');
+    if (pm === 'vs_cops' || pm === 'vs_rival' || pm === 'all_out') this.save.data.selection.mode = pm;
+    const pf = params.get('faction');
+    if (pf === 'red' || pf === 'blue') {
+      this.save.data.selection.factionId = pf;
+      this.save.data.selection.leaderId = this.cfg.factions.factions.find((f) => f.id === pf)!.defaultLeaderId;
+      this.buildHud();
+    }
     if (params.has('stress')) this.stress();
     else if (direct) {
       const map = this.cfg.levels.maps.find((m) => m.id === (params.get('map') ?? this.save.data.selection.mapId))!;
@@ -165,9 +176,18 @@ export class App {
           <button class="btn-pause" aria-label="Pause">II</button>
         </div>
         <div class="weapon-chip"><span class="wname"></span><span class="wlvl"></span></div>
+        <button class="btn-focus" aria-label="Focus fire"></button>
       </div>`;
-    drawPortrait(this.hud.querySelector('canvas')!, this.leaderChar(), this.faction().colors.accent);
+    drawPortrait(this.hud.querySelector('canvas')!, this.leaderChar(), this.faction().colors.accent, this.save.data.selection.custom);
     this.hud.querySelector('.btn-pause')!.addEventListener('click', () => this.pause());
+    const focusBtn = this.hud.querySelector<HTMLButtonElement>('.btn-focus')!;
+    focusBtn.addEventListener('click', () => {
+      const b = this.session?.battle;
+      if (!b) return;
+      const order = ['nearest', 'police', 'rival'] as const;
+      b.focus = order[(order.indexOf(b.focus) + 1) % order.length];
+      this.paintFocus();
+    });
     const snd = this.hud.querySelector<HTMLButtonElement>('.btn-sound')!;
     const paint = () => snd.classList.toggle('off', !this.save.data.settings.sound);
     paint();
@@ -178,6 +198,19 @@ export class App {
       void this.save.save();
     });
     this.refreshCurrencies();
+  }
+
+  /** All-Out: which side the crew prioritizes (label from config names) */
+  private paintFocus(): void {
+    const b = this.session?.battle;
+    const btn = this.hud.querySelector<HTMLButtonElement>('.btn-focus')!;
+    const allOut = !!b && b.loadout.mode === 'all_out' && !this.session!.autoplay;
+    this.stage.dataset.allout = allOut ? '1' : '';
+    if (!b || !allOut) return;
+    const rival = this.cfg.factions.factions.find((f) => f.id === this.faction().rivalId)!;
+    const label = b.focus === 'nearest' ? 'NEAREST' : b.focus === 'police' ? this.cfg.factions.police.displayName.toUpperCase() : rival.displayName.toUpperCase();
+    btn.innerHTML = `<small>FOCUS</small>${esc(label)}`;
+    btn.style.setProperty('--c', b.focus === 'rival' ? rival.colors.primary : b.focus === 'police' ? this.cfg.factions.police.colors.lightBlue : '#ffffff');
   }
 
   private refreshCurrencies(): void {
@@ -205,6 +238,10 @@ export class App {
 
   // -------------------------------------------------------------- screens
   private setScreen(s: Screen, html: string): void {
+    if (this.preview) {
+      this.preview.dispose();
+      this.preview = null;
+    }
     this.screen = s;
     this.stage.dataset.screen = s;
     this.screenEl.innerHTML = html;
@@ -232,7 +269,7 @@ export class App {
         <button class="btn btn-big" data-act="play">TAP TO PLAY</button>
         <small class="legal">Stylized violence · 17+</small>
       </div>`);
-    this.screenEl.querySelector('[data-act="play"]')!.addEventListener('click', () => this.showHub());
+    this.screenEl.querySelector('[data-act="play"]')!.addEventListener('click', () => (this.save.data.selection.onboarded ? this.showHub() : this.showFaction()));
   }
 
   private showHub(): void {
@@ -256,17 +293,184 @@ export class App {
     this.setScreen('hub', `
       <div class="hub">
         <div class="hub-head">
-          <div class="tag" style="--c:${f.colors.primary}">${esc(f.displayName.toUpperCase())} · VS ${esc(this.cfg.factions.police.displayName.toUpperCase())}</div>
+          <div class="hub-btns">
+            <button class="chip" data-act="crew" style="--c:${f.colors.primary}">${esc(f.displayName.toUpperCase())} · ${esc(this.leaderChar().displayName.toUpperCase())}</button>
+            <button class="chip" data-act="mode" style="--c:#2d3445">${esc(this.modeLabel(sel.mode))}</button>
+          </div>
           <h2>${esc(map.displayName.toUpperCase())}</h2>
         </div>
         <div class="path">${nodes.join('')}</div>
         <div class="maps">
-          ${maps.map((m) => `<div class="mapcard ${m.id === map.id ? 'on' : 'locked'}" style="--sky:${m.theme.sky};--road:${m.theme.road}">${esc(m.displayName)}</div>`).join('')}
+          ${maps
+            .map((m) => {
+              const open = this.mapUnlocked(m);
+              return `<button class="mapcard ${m.id === map.id ? 'on' : ''} ${open ? '' : 'locked'}" ${open ? `data-map="${m.id}"` : 'disabled'} style="--sky:${m.theme.sky};--road:${m.theme.road}">${esc(m.displayName)}${open ? '' : `<small>${m.levels.length ? 'LOCKED' : 'SOON'}</small>`}</button>`;
+            })
+            .join('')}
         </div>
       </div>`);
     for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('[data-level]'))
       el.addEventListener('click', () => this.play(map, authored.get(Number(el.dataset.level))!));
+    for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('[data-map]'))
+      el.addEventListener('click', () => {
+        this.save.data.selection.mapId = el.dataset.map!;
+        void this.save.save();
+        this.showHub();
+      });
+    this.screenEl.querySelector('[data-act="crew"]')!.addEventListener('click', () => this.showFaction());
+    this.screenEl.querySelector('[data-act="mode"]')!.addEventListener('click', () => this.showMode());
     this.refreshCurrencies();
+  }
+
+  /** a map opens once the previous map's last authored level is cleared */
+  private mapUnlocked(m: MapDef): boolean {
+    if (!m.levels.length) return false;
+    const maps = [...this.cfg.levels.maps].sort((a, b) => a.unlockOrder - b.unlockOrder);
+    const i = maps.indexOf(m);
+    if (i === 0) return true;
+    const prev = maps[i - 1];
+    const last = Math.max(0, ...prev.levels.map((l) => l.number));
+    return (this.save.data.progress[prev.id] ?? 0) >= last && last > 0;
+  }
+
+  private modeLabel(mode: BattleMode): string {
+    const rival = this.cfg.factions.factions.find((f) => f.id === this.faction().rivalId)!;
+    if (mode === 'vs_cops') return `VS ${this.cfg.factions.police.displayName.toUpperCase()}`;
+    if (mode === 'vs_rival') return `VS ${rival.displayName.toUpperCase()}`;
+    return 'ALL-OUT';
+  }
+
+  // ------------------------------------------------------------ select flow
+  private showFaction(): void {
+    this.setScreen('select', `
+      <div class="select">
+        <h2>PICK YOUR SIDE</h2>
+        <div class="factions">
+          ${this.cfg.factions.factions
+            .map(
+              (f) => `<button class="faction-card ${f.id === this.save.data.selection.factionId ? 'on' : ''}" data-f="${f.id}" style="--c:${f.colors.primary};--a:${f.colors.accent}">
+                <b>${esc(f.displayName.toUpperCase())}</b><span>${esc(f.slogan)}</span></button>`,
+            )
+            .join('')}
+        </div>
+      </div>`);
+    for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('[data-f]'))
+      el.addEventListener('click', () => {
+        const id = el.dataset.f as FactionId;
+        const sel = this.save.data.selection;
+        if (sel.factionId !== id) {
+          sel.factionId = id;
+          sel.leaderId = this.cfg.factions.factions.find((f) => f.id === id)!.defaultLeaderId;
+          sel.custom = {};
+        }
+        this.showCharacter();
+      });
+  }
+
+  private charUnlocked(c: Character): boolean {
+    return c.unlock.kind === 'default' || (this.save.data.shards[c.id] ?? 0) >= c.unlock.shards;
+  }
+
+  private perkText(c: Character): string {
+    const p = c.perk;
+    if (p.kind === 'fire_rate') return `+${Math.round(p.value * 100)}% fire rate`;
+    if (p.kind === 'starting_crew') return `+${p.value} starting crew`;
+    if (p.kind === 'barrel_loot') return `+${Math.round(p.value * 100)}% barrel loot`;
+    return `Leader takes ${Math.round(p.value * 100)}% less damage`;
+  }
+
+  private showCharacter(focusId?: string): void {
+    const sel = this.save.data.selection;
+    const f = this.faction();
+    const chars = this.cfg.characters.characters.filter((c) => c.factionId === f.id);
+    let cur = chars.find((c) => c.id === (focusId ?? sel.leaderId)) ?? chars[0];
+    const cust = this.cfg.characters.customization;
+    this.setScreen('select', `
+      <div class="select char-select" style="--c:${f.colors.primary}">
+        <h2>${esc(f.displayName.toUpperCase())}</h2>
+        <div class="preview"></div>
+        <div class="char-info"><b class="cname"></b><span class="cperk"></span><small class="cbio"></small></div>
+        <div class="roster">${chars.map((c) => `<button class="rost" data-c="${c.id}"><canvas width="96" height="96"></canvas><small></small></button>`).join('')}</div>
+        <div class="custom">
+          <div class="swatches">${cust.skinTones.map((t) => `<button class="sw" data-skin="${t}" style="background:${t}"></button>`).join('')}</div>
+          <div class="hats">${cust.outfitPieces.hats.map((h) => `<button class="hat" data-hat="${h}">${esc(h.replace('_', ' ').replace('back', '').toUpperCase())}</button>`).join('')}</div>
+        </div>
+        <button class="btn btn-big" data-act="pick">SELECT</button>
+      </div>`);
+    this.preview = new CharacterPreview(this.screenEl.querySelector('.preview')!);
+    const paint = () => {
+      const unlocked = this.charUnlocked(cur);
+      const custom = cur.id === sel.leaderId ? sel.custom : {};
+      const look: Look = lookFromOutfit(cur.outfit, custom.skinTone ?? cur.skinTone);
+      if (custom.hat) look.hat = custom.hat as Look['hat'];
+      this.preview!.show(look, cur.idlePose, f.colors.primary, !unlocked);
+      this.screenEl.querySelector('.cname')!.textContent = cur.displayName.toUpperCase();
+      this.screenEl.querySelector('.cperk')!.textContent = this.perkText(cur);
+      this.screenEl.querySelector('.cbio')!.textContent = cur.bio;
+      const pick = this.screenEl.querySelector<HTMLButtonElement>('[data-act="pick"]')!;
+      pick.disabled = !unlocked;
+      pick.textContent = unlocked ? 'SELECT' : `LOCKED · ${this.save.data.shards[cur.id] ?? 0}/${cur.unlock.kind === 'shards' ? cur.unlock.shards : 0} SHARDS`;
+      this.screenEl.querySelector('.custom')!.classList.toggle('off', !unlocked || cur.id !== sel.leaderId);
+      for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('.rost')) {
+        const c = chars.find((x) => x.id === el.dataset.c)!;
+        el.classList.toggle('on', c === cur);
+        el.classList.toggle('locked', !this.charUnlocked(c));
+        el.querySelector('small')!.textContent = this.charUnlocked(c) ? c.displayName : `${this.save.data.shards[c.id] ?? 0}/${c.unlock.kind === 'shards' ? c.unlock.shards : 0}`;
+        drawPortrait(el.querySelector('canvas')!, c, f.colors.accent, c.id === sel.leaderId ? sel.custom : {});
+      }
+      for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('.sw')) el.classList.toggle('on', (sel.custom.skinTone ?? cur.skinTone) === el.dataset.skin);
+      for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('.hat')) el.classList.toggle('on', (sel.custom.hat ?? cur.outfit.hat) === el.dataset.hat);
+    };
+    for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('.rost'))
+      el.addEventListener('click', () => {
+        cur = chars.find((c) => c.id === el.dataset.c)!;
+        if (this.charUnlocked(cur) && cur.id !== sel.leaderId) {
+          sel.leaderId = cur.id;
+          sel.custom = {};
+        }
+        paint();
+      });
+    for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('.sw'))
+      el.addEventListener('click', () => {
+        sel.custom.skinTone = el.dataset.skin;
+        paint();
+      });
+    for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('.hat'))
+      el.addEventListener('click', () => {
+        sel.custom.hat = el.dataset.hat;
+        paint();
+      });
+    this.screenEl.querySelector('[data-act="pick"]')!.addEventListener('click', () => {
+      sel.leaderId = cur.id;
+      void this.save.save();
+      this.buildHud();
+      this.showMode();
+    });
+    paint();
+  }
+
+  private showMode(): void {
+    const sel = this.save.data.selection;
+    const rival = this.cfg.factions.factions.find((f) => f.id === this.faction().rivalId)!;
+    const police = this.cfg.factions.police;
+    const modes: { id: BattleMode; title: string; desc: string; c: string }[] = [
+      { id: 'vs_cops', title: this.modeLabel('vs_cops'), desc: `Every wave is ${police.displayName}. Big Sarge waits at the end.`, c: police.colors.lightBlue },
+      { id: 'vs_rival', title: this.modeLabel('vs_rival'), desc: `Take on the ${rival.displayName}. Big Homie mid-chapter, Big Sarge crashes the finale.`, c: rival.colors.primary },
+      { id: 'all_out', title: 'ALL-OUT', desc: `${police.displayName} and the ${rival.displayName} at once. They fight each other too. Pick who to focus.`, c: '#ffb020' },
+    ];
+    this.setScreen('select', `
+      <div class="select">
+        <h2>BATTLE MODE</h2>
+        <div class="modes">${modes.map((m) => `<button class="mode-card ${m.id === sel.mode ? 'on' : ''}" data-m="${m.id}" style="--c:${m.c}"><b>${esc(m.title)}</b><span>${esc(m.desc)}</span></button>`).join('')}</div>
+      </div>`);
+    for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('[data-m]'))
+      el.addEventListener('click', () => {
+        sel.mode = el.dataset.m as BattleMode;
+        sel.onboarded = true;
+        void this.save.save();
+        this.startAttract(); // re-skin the background demo with the chosen crew
+        this.showHub();
+      });
   }
 
   private play(map: MapDef, level: LevelDef, autoplay = false, skipSec = 0, seed?: number): void {
@@ -274,6 +478,7 @@ export class App {
     this.current = { map, level };
     const sel = this.save.data.selection;
     const loadout = buildLoadout(this.cfg, this.leaderChar(), sel.mode, this.save.data.upgrades);
+    loadout.cosmetic = { ...sel.custom };
     this.setScreen('play', '');
     this.lastWeapon = '';
     this.session = new GameSession(this.cfg, this.renderer, this.overlay, this.stage, map, level, loadout, {
@@ -281,6 +486,7 @@ export class App {
       onWin: () => this.finish(),
       onFail: () => this.showFail(),
     }, { autoplay, skipSec, seed });
+    this.paintFocus();
   }
 
   /** Perf scene from the acceptance criteria: 500 crew vs 1,500 enemies. Dev only (?stress&fps). */
@@ -319,6 +525,12 @@ export class App {
           if (e.attackId === 'call_backup' || e.attackId === 'summon_runners') a.siren();
           break;
         case 'bossEnrage': a.siren(); break;
+        case 'hazard':
+          if (e.phase === 'telegraph') {
+            if (e.kind === 'drive_by') a.horn();
+            else a.chopper();
+          }
+          break;
         case 'bossDefeated': a.explosion(true); break;
         case 'won': a.win(); break;
         case 'failed': a.fail(); break;

@@ -14,6 +14,8 @@ export interface Loadout {
   /** multiplies recruit packs and cash from obstacles */
   lootMult: number;
   unitHpMult: number;
+  /** render-only leader customization */
+  cosmetic: { skinTone?: string; hat?: string };
 }
 
 /** Upgrade levels keyed by economy upgrade id (Phase 3 fills these from the save). */
@@ -42,5 +44,6 @@ export function buildLoadout(
     leaderDamageReduction: perk.kind === 'leader_damage_reduction' ? perk.value : 0,
     lootMult: 1 + up('loot_bonus') + (perk.kind === 'barrel_loot' ? perk.value : 0),
     unitHpMult: 1,
+    cosmetic: {},
   };
 }

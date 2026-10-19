@@ -16,7 +16,16 @@ export interface SaveData {
   progress: Record<string, number>;
   shards: Record<string, number>;
   upgrades: Record<string, number>;
-  selection: { factionId: FactionId; leaderId: string; mode: BattleMode; mapId: string };
+  selection: {
+    factionId: FactionId;
+    leaderId: string;
+    mode: BattleMode;
+    mapId: string;
+    /** leader customization (stays inside the faction palette) */
+    custom: { skinTone?: string; hat?: string };
+    /** finished the first-run faction/character/mode flow */
+    onboarded: boolean;
+  };
   levelsPlayed: number;
   settings: { haptics: boolean; sound: boolean; quality?: number };
 }
@@ -55,7 +64,7 @@ export function defaultSave(cfg: GameConfig): SaveData {
     progress: {},
     shards: {},
     upgrades: {},
-    selection: { factionId: red.id, leaderId: red.defaultLeaderId, mode: 'vs_cops', mapId: cfg.levels.maps[0].id },
+    selection: { factionId: red.id, leaderId: red.defaultLeaderId, mode: 'vs_cops', mapId: cfg.levels.maps[0].id, custom: {}, onboarded: false },
     levelsPlayed: 0,
     settings: { haptics: true, sound: true },
   };
@@ -71,7 +80,10 @@ export class SaveService {
     if (raw) {
       try {
         const parsed = JSON.parse(raw) as Partial<SaveData>;
-        if (parsed.version === SAVE_VERSION) this.data = { ...defaultSave(this.cfg), ...parsed } as SaveData;
+        if (parsed.version === SAVE_VERSION) {
+          const base = defaultSave(this.cfg);
+          this.data = { ...base, ...parsed, selection: { ...base.selection, ...parsed.selection } } as SaveData;
+        }
       } catch {
         /* corrupt save → defaults */
       }

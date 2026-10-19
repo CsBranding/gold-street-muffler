@@ -1,10 +1,11 @@
 /** Draws a flat leader portrait from the outfit config (placeholder until final art). */
 import type { Character } from '../schema/types';
 
-export function drawPortrait(canvas: HTMLCanvasElement, ch: Character, bg: string): void {
+export function drawPortrait(canvas: HTMLCanvasElement, chIn: Character, bg: string, custom: { skinTone?: string; hat?: string } = {}): void {
+  const ch = { ...chIn, skinTone: custom.skinTone ?? chIn.skinTone };
   const s = canvas.width;
   const c = canvas.getContext('2d')!;
-  const o = ch.outfit;
+  const o = { ...ch.outfit, hat: (custom.hat as typeof chIn.outfit.hat) ?? ch.outfit.hat };
   c.clearRect(0, 0, s, s);
   c.fillStyle = bg;
   c.fillRect(0, 0, s, s);

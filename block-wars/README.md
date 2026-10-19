@@ -131,10 +131,44 @@ and Big Sarge winds up, slams, raises his shield, roars on enrage and topples.
 - **Impacts:** physical debris from barrels/crates/cruisers, shockwave rings on
   slams, explosions and gates, and a short hit-stop on big hits.
 
-### Next: Phase 2
-Faction / Character / Battle Mode / Map select screens, the Blue faction, VS Rival
-(mini-boss Big Homie at L5 and Big Sarge at L10) and All-Out three-way infighting,
-the remaining weapons (Drum Draco, Micro SMG, AR Pistol, Pump, LMG, Gold Draco),
-SWAT, Motor Cop, Helicopter spotlight, rival Enforcer/Runner/Rooftop/Drive-By,
-hordes entering from the next lane, Hood Block and Harbor Pier maps, plus an
-on-device performance pass.
+### Phase 2: select screens, modes, roster, maps ✅
+- **Flow:** Splash → Pick Your Side → Character (3D turntable preview of
+  the rigged leader in their configured idle pose, perk, bio, shard-locked
+  roster, skin tone and headwear customization) → Battle Mode → Hub
+  (map + level, crew/mode chips to change later). First-run only; saved.
+- **Blue faction:** full roster in config; crews, rivals, boss and UI recolor
+  from faction config.
+- **VS Rival:** hordes swap to the rival set via `counterpartId`; Big Homie
+  (rival OG, Drum Draco spray cone, runner summons) at level 5, Big Sarge at
+  the finale.
+- **All-Out:** police and rival units sharing a horde fight each other (no
+  player credit) and split their fire; FOCUS button picks nearest / cops /
+  rival; a rival crew crashes the Big Sarge fight and hits him too.
+- **Enemies + hazards:** SWAT, Motor Cop flank squads, rooftop shooters on a
+  ledge (they pick the crew off as it passes), helicopter spotlight (+50%
+  damage taken, sweeping), lowrider drive-by (lane warning + horn, then a
+  firing pass). Each resolves to its counterpart by mode.
+- **Weapons:** all 9 in play; Micro SMG, Pump, AR Pistol, Drum Draco, LMG and
+  Gold Draco placed as loot. The crew holds at its weapon's range.
+- **Maps:** Hood Block (the reference image's golden-hour street: corner
+  stores with barred windows and signs, chain-link lots, palms, power lines,
+  old sedans) and Harbor Pier (planks, bollards, container stacks, gantry
+  cranes). Each: levels 1-3 + mini-boss level 5; maps unlock in order.
+- **Tests:** every authored level in every map is beaten by the bot in all
+  three modes under the 2-minute cap; boss resolution, infighting, hazards.
+
+**Self-critique, top 5 fixed:** crews stood out of range with short-range
+guns (hold distance now follows weapon range); massed riot walls and a 35%
+per-map multiplier made new maps unwinnable without upgrades (map step 10%,
+shields 220, riot counts eased); the bot undervalued weapon lanes; the
+helicopter flew out of frame; the hub/attract kept the old faction after
+switching sides.
+
+**Known gaps:** Downtown Strip and Rail Yard have themes but no levels; levels
+4 and 6-9 are "coming soon"; hair/face-tattoo options are in config but only
+skin tone and headwear render yet.
+
+### Next: Phase 3
+Currencies spent on upgrades (starting crew, damage, fire rate, leader HP,
+loot, offline income), roster leveling with shards, Hood Base (Corner Store,
+Gym, Armory, Garage), daily missions, login streak, chapter chests.

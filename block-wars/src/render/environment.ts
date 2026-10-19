@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import type { MapDef } from '../schema/types';
 import type { CompiledLevel } from '../sim/world';
+import { buildHarbor, buildHoodBlock } from './scenery';
 import { asphaltTexture } from './textures';
 import { toonGradient } from './vat';
 
@@ -31,9 +32,12 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
   group.add(road);
 
   // Deck side / bridge girder
-  const deckSide = new THREE.Mesh(new THREE.BoxGeometry(roadWidth + 2.4, 1.6, len), toon('#8b8f96'));
-  deckSide.position.set(0, -0.82, zc);
-  group.add(deckSide);
+  const bridge = th.edge === 'water';
+  if (bridge || th.edge === 'pier') {
+    const deckSide = new THREE.Mesh(new THREE.BoxGeometry(roadWidth + 2.4, 1.6, len), toon(bridge ? '#8b8f96' : '#5e5a55'));
+    deckSide.position.set(0, -0.82, zc);
+    group.add(deckSide);
+  }
 
   // Lane dashes (instanced) — skip inside lane-wall segments where walls take over.
   const dashGeo = new THREE.BoxGeometry(0.14, 0.02, 2.2);
@@ -75,12 +79,12 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
       bi++;
     }
   barriers.receiveShadow = true;
-  group.add(barriers, stripes);
+  if (bridge) group.add(barriers, stripes);
 
   // Light poles every ~24m alternating sides
   const poleMat = toon('#7b8088');
   const lampMat = new THREE.MeshBasicMaterial({ color: '#fff4c8' });
-  for (let z = z0 + 10, k = 0; z < z1; z += 24, k++) {
+  for (let z = z0 + 10, k = 0; bridge && z < z1; z += 24, k++) {
     const s = k % 2 === 0 ? -1 : 1;
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 6, 6), poleMat);
     pole.position.set(s * (half + 0.9), 3, z);
@@ -128,10 +132,15 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
         gl_FragColor = vec4(mix(c, uFog, f), 1.0);
       }`,
   });
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(400, len + 400), waterMat);
+  const onLand = th.edge === 'sidewalk' || th.edge === 'gravel';
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(400, len + 400), onLand ? toon(th.ground) : waterMat);
   water.rotation.x = -Math.PI / 2;
-  water.position.set(0, th.edge === 'water' ? -3 : -0.05, zc);
+  water.position.set(0, onLand ? -0.05 : th.edge === 'water' ? -3 : -2.2, zc);
+  water.receiveShadow = onLand;
   group.add(water);
+  const half0 = roadWidth / 2;
+  if (th.edge === 'sidewalk') buildHoodBlock(group, z0, z1, half0, Math.round(level.length));
+  if (th.edge === 'pier') buildHarbor(group, z0, z1, half0, Math.round(level.length));
 
   // ---- sky dome: zenith → horizon gradient with a hazy sun
   const skyMat = new THREE.ShaderMaterial({

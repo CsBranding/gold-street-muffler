@@ -204,6 +204,21 @@ export class AudioService {
     o.stop(t + 1.3);
   }
 
+  horn(): void {
+    if (!this.ready) return;
+    const t = this.ctx!.currentTime;
+    for (const [i, hz] of [[0, 392], [0.28, 392]] as const) {
+      this.tone(t + i, 'sawtooth', hz, hz, 0.22, 0.18);
+      this.tone(t + i, 'sawtooth', hz * 1.26, hz * 1.26, 0.22, 0.12);
+    }
+  }
+
+  chopper(): void {
+    if (!this.ready) return;
+    const t = this.ctx!.currentTime;
+    for (let i = 0; i < 14; i++) this.noiseBurst(t + i * 0.11, 0.07, 'lowpass', 300, 0.8, 0.35 * (1 - i / 16));
+  }
+
   reward(rarity: string): void {
     if (!this.ready) return;
     const t = this.ctx!.currentTime;

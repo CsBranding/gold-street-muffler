@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import type { GameConfig, Reward, Weapon } from '../schema/types';
 import type { Battle, SimEvent } from '../sim/battle';
 import { fillOffsets } from '../sim/formation';
-import type { GateRT, ObstacleRT, PickupRT } from '../sim/world';
+import type { GateRT, HordeRT, ObstacleRT, PickupRT } from '../sim/world';
 import type { Overlay } from '../ui/overlay';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
@@ -227,7 +227,9 @@ export class BattleRenderer {
     const r = cfg.game.render;
     const cap = Math.ceil(maxCrew / variants.length);
     this.crew = variants.map((c) => new UnitFamily(this.level, lookFromOutfit(c.outfit, c.skinTone), cap, r.maxCorpses, faction.colors.primary));
-    const leaderMesh = buildSkinnedMesh(lookFromOutfit(leaderChar.outfit, leaderChar.skinTone), 'hi', stylizedMaterial({ rim: faction.colors.primary, rimStrength: 0.6 }));
+    const leaderLook = lookFromOutfit(leaderChar.outfit, battle.loadout.cosmetic.skinTone ?? leaderChar.skinTone);
+    if (battle.loadout.cosmetic.hat) leaderLook.hat = battle.loadout.cosmetic.hat as Look['hat'];
+    const leaderMesh = buildSkinnedMesh(leaderLook, 'hi', stylizedMaterial({ rim: faction.colors.primary, rimStrength: 0.6 }));
     leaderMesh.scale.setScalar(cfg.game.crowd.leaderScale);
     leaderMesh.castShadow = true;
     this.leader = new RiggedActor(leaderMesh, humanoidClips());
@@ -281,8 +283,15 @@ export class BattleRenderer {
 
     if (battle.level.boss) {
       const b = battle.level.boss;
-      const mat = stylizedMaterial({ rim: police.lightBlue, rimStrength: 0.5 });
-      const mesh = buildSkinnedMesh(copLook(police, 'boss'), 'hi', mat);
+      const rivalBoss = b.def.side === 'rival';
+      const mat = stylizedMaterial({ rim: rivalBoss ? rival.colors.primary : police.lightBlue, rimStrength: 0.5 });
+      let bossLook = copLook(police, 'boss');
+      if (rivalBoss) {
+        // Big Homie: an oversized rival OG in the rival set's colors, bat in hand
+        const og = cfg.characters.characters.find((c) => c.id === rival.defaultLeaderId)!;
+        bossLook = { ...lookFromOutfit(og.outfit, og.skinTone, 'bat'), bulk: 1.45 };
+      }
+      const mesh = buildSkinnedMesh(bossLook, 'hi', mat);
       mesh.castShadow = true;
       mesh.scale.setScalar(b.def.heightMultOfCrew);
       mesh.rotation.y = Math.PI;
@@ -296,6 +305,7 @@ export class BattleRenderer {
       };
       const red = light(police.lightRed, 0.24);
       const blue = light(police.lightBlue, -0.24);
+      red.userData.cop = blue.userData.cop = !rivalBoss;
       const shield = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.85, 0.04), new THREE.MeshToonMaterial({ color: '#9fb3cc', transparent: true, opacity: 0.85, gradientMap: mat.gradientMap }));
       shield.position.set(0, -0.12, 0.22);
       shield.visible = false;
@@ -382,6 +392,8 @@ export class BattleRenderer {
     this.enemies.clear();
     this.pickupSprites.clear();
     this.gasMeshes = [];
+    this.hazardViews.clear();
+    this.ledges.clear();
     this.crew = [];
     this.leader = null;
     this.boss = null;
@@ -564,6 +576,7 @@ export class BattleRenderer {
     this.updateGates(battle, dt);
     this.updatePickups(battle.pickups);
     this.updateBoss(battle, dt);
+    this.updateHazards(battle, dt);
     this.updateCamera(battle, dt);
     this.tracers.update(dt);
     this.debris.update(dt);
@@ -687,6 +700,118 @@ export class BattleRenderer {
     }
   }
 
+  private ledges = new Set<number>();
+  /** a rooftop/awning block under ledge shooters */
+  private ensureLedge(h: HordeRT): void {
+    if (this.ledges.has(h.id)) return;
+    this.ledges.add(h.id);
+    const rows = Math.ceil(h.total / h.columns);
+    const sp = this.cfg.game.horde.spacing;
+    const ht = this.cfg.game.horde.rooftopHeight;
+    const w = (h.columns - 1) * sp + 1.4;
+    const d = rows * sp + 1.4;
+    const tm = (c: string) => new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient() });
+    const block = new THREE.Mesh(new THREE.BoxGeometry(w, ht, d), tm('#b9a98e'));
+    block.position.set(h.x, ht / 2, h.anchorZ + (rows - 1) * sp * 0.5);
+    block.castShadow = block.receiveShadow = true;
+    const lip = new THREE.Mesh(new THREE.BoxGeometry(w + 0.2, 0.25, d + 0.2), tm('#8a7a62'));
+    lip.position.set(block.position.x, ht - 0.1, block.position.z);
+    this.level.add(block, lip);
+  }
+
+  // ------------------------------------------------------------- hazards
+  private hazardViews = new Map<number, { root: THREE.Group; cone?: THREE.Mesh; disc?: THREE.Mesh; rotor?: THREE.Object3D; lane?: THREE.Mesh }>();
+  private updateHazards(battle: Battle, dt: number): void {
+    const hzCfg = this.cfg.game.hazards;
+    for (const hz of battle.level.hazards) {
+      let view = this.hazardViews.get(hz.id);
+      if (!view && hz.state !== 'waiting' && hz.state !== 'done') view = this.buildHazard(battle, hz.id);
+      if (!view) continue;
+      const live = hz.state === 'telegraph' || hz.state === 'active';
+      view.root.visible = live;
+      if (view.lane) view.lane.visible = live;
+      if (!live) continue;
+      const pulse = 0.5 + 0.5 * Math.sin(this.time * 14);
+      if (hz.kind === 'spotlight') {
+        view.root.position.set(hz.x, 0, hz.z);
+        view.rotor!.rotation.y += dt * 40;
+        const k = hz.state === 'active' ? 1 : 0.35;
+        (view.cone!.material as THREE.MeshBasicMaterial).opacity = 0.16 * k;
+        (view.disc!.material as THREE.MeshBasicMaterial).opacity = 0.45 * k;
+        view.disc!.scale.setScalar(hzCfg.spotlightWidth / 2);
+      } else {
+        view.root.position.set(hz.x, 0, hz.z);
+        view.root.traverse((o) => (o.name === 'wheel' ? (o.rotation.x -= dt * 30) : null));
+        const lane = view.lane!;
+        const zA = this.crowdZ - 12;
+        lane.position.set((hz.x0 + hz.x1) / 2, 0.05, (zA + hz.z) / 2);
+        lane.scale.set(hz.x1 - hz.x0, Math.max(1, hz.z - zA), 1);
+        (lane.material as THREE.MeshBasicMaterial).opacity = hz.state === 'telegraph' ? 0.2 + 0.25 * pulse : 0.12;
+        if (hz.state === 'active' && Math.random() < dt * 25) {
+          // drive-by spray from the passenger side
+          const sx = hz.x + (Math.random() < 0.5 ? -0.8 : 0.8);
+          this.tracers.spawn(sx, 0.9, hz.z, this.crowdX + (Math.random() - 0.5) * 3, 0.7, this.crowdZ + (Math.random() - 0.5) * 3, C_TRACER);
+          this.sparks.burst(sx, 0.9, hz.z, { count: 1, color: C_FLASH, speed: 0.4, size: 0.6, life: 0.06, drag: 8 });
+        }
+      }
+    }
+  }
+
+  private buildHazard(battle: Battle, id: number): { root: THREE.Group; cone?: THREE.Mesh; disc?: THREE.Mesh; rotor?: THREE.Object3D; lane?: THREE.Mesh } {
+    const hz = battle.level.hazards[id];
+    const root = new THREE.Group();
+    const tm = (c: string) => new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient() });
+    let view: { root: THREE.Group; cone?: THREE.Mesh; disc?: THREE.Mesh; rotor?: THREE.Object3D; lane?: THREE.Mesh };
+    if (hz.kind === 'spotlight') {
+      const heli = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.9, 1.6, 4, 10), tm('#1b2440'));
+      body.rotation.x = Math.PI / 2;
+      const glass = new THREE.Mesh(new THREE.SphereGeometry(0.75, 10, 8), tm('#7fb0d8'));
+      glass.position.set(0, 0.1, 1.2);
+      const tail = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 3), tm('#1b2440'));
+      tail.position.set(0, 0.3, -2.4);
+      const fin = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.5), tm('#f2f2f2'));
+      fin.position.set(0, 0.7, -3.8);
+      const rotor = new THREE.Mesh(new THREE.BoxGeometry(7, 0.05, 0.25), tm('#222'));
+      rotor.position.y = 1.05;
+      const rotor2 = rotor.clone();
+      rotor2.rotation.y = Math.PI / 2;
+      const rotorGroup = new THREE.Group();
+      rotorGroup.add(rotor, rotor2);
+      const lightR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.2), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2a3a').multiplyScalar(3) }));
+      lightR.position.set(0.5, -0.8, 0.6);
+      heli.add(body, glass, tail, fin, rotorGroup, lightR);
+      heli.position.set(0, 6.5, 4.5);
+      heli.rotation.x = -0.12;
+      heli.traverse((o) => ((o as THREE.Mesh).isMesh ? (o.castShadow = true) : null));
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(this.cfg.game.hazards.spotlightWidth / 2, 7.6, 24, 1, true),
+        new THREE.MeshBasicMaterial({ color: '#fff6d0', transparent: true, opacity: 0.15, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }),
+      );
+      cone.position.set(0, 3.8, 0);
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 32), new THREE.MeshBasicMaterial({ color: '#fff3c0', transparent: true, opacity: 0.4, depthWrite: false, blending: THREE.AdditiveBlending }));
+      disc.rotation.x = -Math.PI / 2;
+      disc.position.y = 0.06;
+      root.add(heli, cone, disc);
+      view = { root, cone, disc, rotor: rotorGroup };
+    } else {
+      const fac = this.cfg.factions.factions;
+      const rivalColor = fac.find((f) => f.id !== battle.loadout.factionId)!.colors.primary;
+      const car = buildLowrider(new THREE.Color(rivalColor).multiplyScalar(0.6).getStyle());
+      car.rotation.y = Math.PI; // driving toward the crew
+      car.scale.setScalar(1.6);
+      root.add(car);
+      const lane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: '#ffb020', transparent: true, opacity: 0.3, depthWrite: false }));
+      lane.rotation.x = -Math.PI / 2;
+      lane.renderOrder = 2;
+      this.level.add(lane);
+      view = { root, lane };
+    }
+    this.level.add(root);
+    this.hazardViews.set(id, view);
+    return view;
+  }
+
   private lodFor(dz: number): 0 | 1 | 2 {
     return dz < this.lodDistance ? 0 : dz < this.farDistance ? 1 : 2;
   }
@@ -753,6 +878,13 @@ export class BattleRenderer {
       const moving = h.state === 'advancing' || Math.abs(dz) + Math.abs(dx) > 0.15;
       const clip: CrowdClip = moving ? 'run' : h.state === 'idle' ? 'aim' : 'shoot';
       const def = battle.level.enemyDefs[e.defIndex[i]];
+      if (h.rooftop) {
+        this.ensureLedge(h);
+        // ledge shooters turn to face the crew as it passes
+        const yaw = Math.atan2(this.crowdX - this.eDispX[i], this.crowdZ - this.eDispZ[i]);
+        f.add(this.eDispX[i], this.eDispZ[i], yaw, def.scale, 'shoot', phaseOf(i), this.lodFor(this.eDispZ[i] - camZ), 1, this.cfg.game.horde.rooftopHeight);
+        continue;
+      }
       f.add(this.eDispX[i], this.eDispZ[i], Math.PI, def.scale, clip, phaseOf(i), this.lodFor(this.eDispZ[i] - camZ));
       this.blobs.add(this.eDispX[i], this.eDispZ[i], 0.55 * def.scale);
     }
@@ -819,15 +951,16 @@ export class BattleRenderer {
     v.mat.userData.uniforms.uTime.value = this.time;
     const strobe = b.enraged ? 22 : 7;
     const on = Math.sin(this.time * strobe) > 0;
-    v.red.visible = on && !v.dead;
-    v.blue.visible = !on && !v.dead;
+    v.red.visible = on && !v.dead && v.red.userData.cop;
+    v.blue.visible = !on && !v.dead && v.blue.userData.cop;
     v.shield.visible = b.shieldTimer > 0;
     if (!v.dead && !v.telegraph && b.shieldTimer <= 0 && (v.actor.current === 'shield' || v.actor.current === 'slam' || v.actor.current === 'roar') && !v.actor.busy()) v.actor.play('idle', 0.3);
     v.flash = Math.max(0, v.flash - dt);
     // hit flash is white; enrage shows through a pulsing red rim + fast strobes, never a red body (faction color)
     const f = v.flash > 0 ? 0.45 : 0;
     v.mat.emissive.setRGB(f, f, f);
-    v.mat.userData.uniforms.uRim.value.set(b.enraged ? (on ? '#ff3030' : '#3060ff') : this.cfg.factions.police.colors.lightBlue).multiplyScalar(b.enraged ? 0.9 : 0.5);
+    if (v.red.userData.cop) v.mat.userData.uniforms.uRim.value.set(b.enraged ? (on ? '#ff3030' : '#3060ff') : this.cfg.factions.police.colors.lightBlue).multiplyScalar(b.enraged ? 0.9 : 0.5);
+    else if (b.enraged) v.mat.userData.uniforms.uRim.value.set(on ? '#ffffff' : '#ffcc33').multiplyScalar(0.8);
     v.actor.update(dt * (b.enraged ? 1.3 : 1));
     this.blobs.add(mesh.position.x, mesh.position.z, 3.2);
     const tg = b.telegraph;

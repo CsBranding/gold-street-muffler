@@ -1007,6 +1007,17 @@
                               ],
                               "additionalProperties": false
                             }
+                          },
+                          "x": {
+                            "default": 0,
+                            "type": "number",
+                            "minimum": -1,
+                            "maximum": 1
+                          },
+                          "offset": {
+                            "default": 0,
+                            "type": "number",
+                            "minimum": 0
                           }
                         },
                         "required": [
@@ -1015,7 +1026,41 @@
                           "side",
                           "enemies",
                           "columns",
-                          "pickups"
+                          "pickups",
+                          "x",
+                          "offset"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "hazard"
+                          },
+                          "length": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          },
+                          "enemyId": {
+                            "type": "string",
+                            "pattern": "^[a-z0-9_]+$"
+                          },
+                          "side": {
+                            "type": "string",
+                            "enum": [
+                              "enemy",
+                              "police",
+                              "rival"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "length",
+                          "enemyId",
+                          "side"
                         ],
                         "additionalProperties": false
                       },
