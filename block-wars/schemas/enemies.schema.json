@@ -118,6 +118,17 @@
           "cash": {
             "type": "number",
             "minimum": 0
+          },
+          "counterpartId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9_]+$"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -136,7 +147,8 @@
           "scale",
           "explodeDamage",
           "explodeRadius",
-          "cash"
+          "cash",
+          "counterpartId"
         ],
         "additionalProperties": false
       }

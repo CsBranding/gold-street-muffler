@@ -70,6 +70,42 @@
         "barricadeDepth": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "obstacleHalfWidth": {
+          "type": "object",
+          "properties": {
+            "barrel": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "crate": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "dumpster": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "cruiser": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "barrel",
+            "crate",
+            "dumpster",
+            "cruiser"
+          ],
+          "additionalProperties": false
+        },
+        "bannerLead": {
+          "type": "number",
+          "minimum": 0
+        },
+        "hordeOffset": {
+          "type": "number",
+          "minimum": 0
         }
       },
       "required": [
@@ -77,7 +113,10 @@
         "laneWallHeight",
         "gateDepth",
         "obstacleDepth",
-        "barricadeDepth"
+        "barricadeDepth",
+        "obstacleHalfWidth",
+        "bannerLead",
+        "hordeOffset"
       ],
       "additionalProperties": false
     },
@@ -133,6 +172,19 @@
           "exclusiveMinimum": 0,
           "maximum": 9007199254740991
         },
+        "reviveInvulnSec": {
+          "type": "number",
+          "minimum": 0
+        },
+        "lateralTargetPenalty": {
+          "type": "number",
+          "minimum": 0
+        },
+        "targetConeDeg": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 89
+        },
         "startCrew": {
           "type": "integer",
           "minimum": 0,
@@ -156,6 +208,9 @@
         "engageRange",
         "leaderScale",
         "maxCrew",
+        "reviveInvulnSec",
+        "lateralTargetPenalty",
+        "targetConeDeg",
         "startCrew",
         "squadStartWeaponId"
       ],
@@ -179,13 +234,23 @@
         "flankDistance": {
           "type": "number",
           "minimum": 0
+        },
+        "pickupDriftSpeed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pushbackOnRevive": {
+          "type": "number",
+          "minimum": 0
         }
       },
       "required": [
         "spacing",
         "aggroRange",
         "pushThreshold",
-        "flankDistance"
+        "flankDistance",
+        "pickupDriftSpeed",
+        "pushbackOnRevive"
       ],
       "additionalProperties": false
     },
@@ -398,6 +463,19 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
+        "tracerWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "lodDistance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maxDamageNumbersPerFlush": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
         "damageNumberLife": {
           "type": "number",
           "exclusiveMinimum": 0
@@ -418,6 +496,9 @@
         "maxDamageNumbers",
         "maxLabels",
         "tracerLife",
+        "tracerWidth",
+        "lodDistance",
+        "maxDamageNumbersPerFlush",
         "damageNumberLife",
         "pixelRatioCap",
         "shadows"
@@ -553,6 +634,24 @@
         "maxLevelSec"
       ],
       "additionalProperties": false
+    },
+    "flow": {
+      "type": "object",
+      "properties": {
+        "winDelaySec": {
+          "type": "number",
+          "minimum": 0
+        },
+        "failDelaySec": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "winDelaySec",
+        "failDelaySec"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [
@@ -570,7 +669,8 @@
     "rarityColors",
     "gateColors",
     "banners",
-    "runCap"
+    "runCap",
+    "flow"
   ],
   "additionalProperties": false
 }

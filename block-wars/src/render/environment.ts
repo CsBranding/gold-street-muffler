@@ -86,25 +86,6 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
     group.add(pole, arm, lamp);
   }
 
-  // Sign gantries over lane-choice segments
-  for (const w of level.walls) {
-    const gm = new THREE.MeshLambertMaterial({ color: '#5d636b' });
-    for (const s of [-1, 1]) {
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.25, 6, 0.25), gm);
-      post.position.set(s * (half + 0.8), 3, w.z0 - 4);
-      group.add(post);
-    }
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(roadWidth + 1.8, 0.35, 0.3), gm);
-    beam.position.set(0, 5.9, w.z0 - 4);
-    group.add(beam);
-    const lanes = w.edges.length - 1;
-    for (let i = 0; i < lanes; i++) {
-      const sign = new THREE.Mesh(new THREE.BoxGeometry((w.edges[i + 1] - w.edges[i]) * 0.8, 1.1, 0.08), new THREE.MeshLambertMaterial({ color: '#1f7a3a' }));
-      sign.position.set((w.edges[i] + w.edges[i + 1]) / 2, 5.1, w.z0 - 4.1);
-      group.add(sign);
-    }
-  }
-
   // Lane walls (low dividers) inside lane segments
   const wallMat = new THREE.MeshLambertMaterial({ color: '#d8d4cc' });
   const capMat = new THREE.MeshLambertMaterial({ color: '#2a6fd6' });

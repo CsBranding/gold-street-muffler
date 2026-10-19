@@ -57,6 +57,8 @@ export class GameSession {
     const el = this.input;
     const down = (e: PointerEvent) => {
       if (this.autoplay || this.paused) return;
+      // UI controls keep their clicks; capturing here would retarget them to the stage
+      if ((e.target as HTMLElement).closest('button, .modal')) return;
       this.dragging = true;
       this.dragStartPx = e.clientX;
       this.dragAnchor = this.battle.crowd.targetX;

@@ -9,7 +9,7 @@ const mode = (process.argv[2] ?? 'vs_cops') as 'vs_cops';
 for (const map of cfg.levels.maps) {
   for (const level of map.levels) {
     const ch = cfg.characters.characters[0];
-    const b = new Battle(cfg, map, level, buildLoadout(cfg, ch, mode), 3);
+    const b = new Battle(cfg, map, level, buildLoadout(cfg, ch, mode), Number(process.argv[3] ?? 7));
     const phaseT: Record<string, number> = {};
     const log: string[] = [];
     let bossStart = 0;

@@ -147,6 +147,33 @@ export function buildCharacter(outfit: Outfit, skin: string, detail: 'crew' | 'l
   return b.build();
 }
 
+/**
+ * Low-detail LOD (~8 boxes) used beyond render.lodDistance. Keeps the same
+ * silhouette, palette and limb codes so the run cycle and readability match.
+ */
+export function buildCharacterLow(outfit: Outfit, skin: string): THREE.BufferGeometry {
+  const b = new Builder();
+  for (const s of [1, -1] as const) b.box(0.15, 0.45, 0.16, 0.085 * s, 0, 0, outfit.pantsColor, s);
+  b.box(0.38, 0.38, 0.22, 0, 0.42, 0, outfit.topColor);
+  if (outfit.top === 'hoodie_open' || outfit.top === 'flannel_open') b.box(0.13, 0.36, 0.01, 0, 0.42, 0.111, outfit.shirtColor);
+  for (const s of [1, -1] as const) b.box(0.11, 0.38, 0.12, 0.235 * s, 0.41, 0, outfit.topColor, (2 * s) as Limb);
+  b.box(0.27, 0.3, 0.26, 0, 0.8, 0, skin);
+  b.box(0.29, 0.08, 0.28, 0, 1.05, 0, outfit.hat === 'none' ? '#141010' : outfit.hatColor);
+  return b.build();
+}
+
+export function buildCopLow(colors: { primary: string; secondary: string }, variant: 'patrol' | 'riot' | 'swat' | 'motor'): THREE.BufferGeometry {
+  const b = new Builder();
+  const navy = variant === 'swat' ? '#2a2f38' : colors.primary;
+  for (const s of [1, -1] as const) b.box(0.15, 0.45, 0.16, 0.085 * s, 0, 0, darken(colors.primary, 0.8), s);
+  b.box(0.38, 0.38, 0.22, 0, 0.42, 0, navy);
+  for (const s of [1, -1] as const) b.box(0.11, 0.38, 0.12, 0.235 * s, 0.41, 0, navy, (2 * s) as Limb);
+  b.box(0.27, 0.3, 0.26, 0, 0.8, 0, '#c68c63');
+  b.box(0.3, 0.1, 0.29, 0, 1.03, 0, variant === 'patrol' ? colors.primary : variant === 'motor' ? '#f2f2f2' : '#1c2130');
+  if (variant === 'riot') b.box(0.46, 0.66, 0.035, 0, 0.18, 0.24, '#9fb3cc');
+  return b.build();
+}
+
 /** Police placeholder: navy uniform, cap, badge; riot variant gets helmet + shield. */
 export function buildCop(colors: { primary: string; secondary: string }, variant: 'patrol' | 'riot' | 'swat' | 'motor'): THREE.BufferGeometry {
   const b = new Builder();

@@ -195,6 +195,10 @@
             "type": "number",
             "exclusiveMinimum": 0
           },
+          "trackSpeed": {
+            "type": "number",
+            "minimum": 0
+          },
           "standoffM": {
             "type": "number",
             "exclusiveMinimum": 0
@@ -224,6 +228,7 @@
           "enrage",
           "weakPoint",
           "flankOffsetM",
+          "trackSpeed",
           "standoffM",
           "contactDps",
           "cash",

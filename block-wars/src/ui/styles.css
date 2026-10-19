@@ -30,6 +30,8 @@ body { font-family: var(--font); color: #fff; user-select: none; -webkit-user-se
 .lbl-boss { font-size: 34px; --stroke: #111; color: #fff; }
 .lbl .bar { width: 96px; height: 10px; margin: 4px auto 0; background: rgba(0, 0, 0, 0.55); border: 2px solid #111; border-radius: 6px; overflow: hidden; -webkit-text-stroke: 0; }
 .lbl-boss .bar { width: 160px; height: 14px; }
+.lbl-crew .bar { width: 60px; height: 8px; display: none; }
+.lbl.lbl-crew .bar > div { background: linear-gradient(#7dff8a, #1fa846); }
 .lbl .bar > div { height: 100%; background: linear-gradient(#ff5a4e, #c4121f); transform-origin: left; }
 
 .dmg { position: absolute; left: 0; top: 0; font-size: 17px; color: #fff; --stroke: #000; will-change: transform, opacity; white-space: nowrap; }
@@ -133,3 +135,4 @@ body { font-family: var(--font); color: #fff; user-select: none; -webkit-user-se
 .mock-ad div { display: flex; flex-direction: column; gap: 6px; align-items: center; font-family: system-ui, sans-serif; }
 .mock-ad b { font: 40px var(--font); }
 .mock-ad small { opacity: 0.5; }
+.stage:not([data-screen='play']) .banner { display: none; }

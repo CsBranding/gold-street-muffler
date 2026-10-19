@@ -60,7 +60,7 @@ export class Overlay {
       const text = document.createElement('span');
       el.appendChild(text);
       let barEl: HTMLDivElement | null = null;
-      if (kind === 'horde' || kind === 'boss') {
+      if (kind === 'horde' || kind === 'boss' || kind === 'crew') {
         const wrap = document.createElement('div');
         wrap.className = 'bar';
         barEl = document.createElement('div');
@@ -78,6 +78,7 @@ export class Overlay {
       s.lastText = text;
     }
     if (s.bar && Math.abs(s.lastBar - bar) > 0.002) {
+      (s.bar.parentElement as HTMLDivElement).style.display = bar < 0 ? 'none' : 'block';
       s.bar.style.transform = `scaleX(${Math.max(0, Math.min(1, bar))})`;
       s.lastBar = bar;
     }

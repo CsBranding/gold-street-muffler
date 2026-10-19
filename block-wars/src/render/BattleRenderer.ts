@@ -10,7 +10,7 @@ import type { Battle, SimEvent } from '../sim/battle';
 import { fillOffsets } from '../sim/formation';
 import type { GateRT, ObstacleRT, PickupRT } from '../sim/world';
 import type { Overlay } from '../ui/overlay';
-import { buildBossCop, buildCharacter, buildCop, crowdMaterial } from './characters';
+import { buildBossCop, buildCharacter, buildCharacterLow, buildCop, buildCopLow, crowdMaterial } from './characters';
 import { Particles, Tracers } from './effects';
 import { buildEnvironment, type Environment } from './environment';
 import { buildProp } from './props';
@@ -57,7 +57,7 @@ export class BattleRenderer {
   private time = 0;
 
   // crowd
-  private crewMeshes: THREE.InstancedMesh[] = [];
+  private crewMeshes: { hi: THREE.InstancedMesh; lo: THREE.InstancedMesh; nHi: number; nLo: number }[] = [];
   private crewMat: CrowdMat | null = null;
   private leader: THREE.Mesh | null = null;
   private leaderMat: CrowdMat | null = null;
@@ -72,7 +72,7 @@ export class BattleRenderer {
   private factionColor = '#e0202e';
 
   // enemies
-  private enemyMeshes = new Map<number, { mesh: THREE.InstancedMesh; mat: CrowdMat; n: number }>();
+  private enemyMeshes = new Map<number, { hi: THREE.InstancedMesh; lo: THREE.InstancedMesh; mat: CrowdMat; nHi: number; nLo: number }>();
   private eDispX = new Float32Array(0);
   private eDispZ = new Float32Array(0);
   private eSeen = new Uint8Array(0);
@@ -117,7 +117,7 @@ export class BattleRenderer {
     this.sun = new THREE.DirectionalLight('#ffffff', 2);
     this.sun.position.set(-6, 14, -4);
     this.scene.add(this.hemi, this.sun, this.sun.target, this.level);
-    this.tracers = new Tracers(r.maxTracers, r.tracerLife);
+    this.tracers = new Tracers(r.maxTracers, r.tracerLife, r.tracerWidth);
     this.sparks = new Particles(Math.floor(r.maxParticles * 0.5), true);
     this.smoke = new Particles(Math.floor(r.maxParticles * 0.5), false);
     this.scene.add(this.tracers.mesh, this.sparks.mesh, this.smoke.mesh);
@@ -172,14 +172,13 @@ export class BattleRenderer {
     const variants = [leaderChar, ...chars.filter((c) => c !== leaderChar)].slice(0, 2);
     const maxCrew = cfg.game.render.maxCrewInstances;
     this.crewMat = crowdMaterial({ instanced: true });
-    this.crewMeshes = variants.map((c) => {
-      const mesh = new THREE.InstancedMesh(buildCharacter(c.outfit, c.skinTone, 'crew'), this.crewMat!, Math.ceil(maxCrew / variants.length));
-      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      mesh.frustumCulled = false;
-      mesh.count = 0;
-      this.level.add(mesh);
-      return mesh;
-    });
+    const cap = Math.ceil(maxCrew / variants.length);
+    this.crewMeshes = variants.map((c) => ({
+      hi: this.instanced(buildCharacter(c.outfit, c.skinTone, 'crew'), this.crewMat!, cap),
+      lo: this.instanced(buildCharacterLow(c.outfit, c.skinTone), this.crewMat!, cap),
+      nHi: 0,
+      nLo: 0,
+    }));
     this.leaderMat = crowdMaterial({ instanced: false });
     this.leader = new THREE.Mesh(buildCharacter(leaderChar.outfit, leaderChar.skinTone, 'leader'), this.leaderMat);
     this.leader.scale.setScalar(cfg.game.crowd.leaderScale);
@@ -203,20 +202,19 @@ export class BattleRenderer {
     battle.level.enemyDefs.forEach((def, di) => {
       if (def.role !== 'unit') return;
       let geo: THREE.BufferGeometry;
+      let low: THREE.BufferGeometry;
       if (def.side === 'police') {
         const v = def.id.includes('riot') ? 'riot' : def.id.includes('swat') ? 'swat' : def.id.includes('motor') ? 'motor' : 'patrol';
         geo = buildCop(police, v);
+        low = buildCopLow(police, v);
       } else {
         const rc = rivalChars[Math.min(rivalChars.length - 1, ['rival_shooter', 'rival_enforcer', 'rival_runner', 'rooftop_shooter'].indexOf(def.id))] ?? rivalChars[0];
         geo = buildCharacter(rc.outfit, rc.skinTone, 'crew');
+        low = buildCharacterLow(rc.outfit, rc.skinTone);
       }
       const mat = crowdMaterial({ instanced: true });
-      const mesh = new THREE.InstancedMesh(geo, mat, cfg.game.render.maxEnemyInstances);
-      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      mesh.frustumCulled = false;
-      mesh.count = 0;
-      this.level.add(mesh);
-      this.enemyMeshes.set(di, { mesh, mat, n: 0 });
+      const n = cfg.game.render.maxEnemyInstances;
+      this.enemyMeshes.set(di, { hi: this.instanced(geo, mat, n), lo: this.instanced(low, mat, n), mat, nHi: 0, nLo: 0 });
     });
     this.ensureEnemyArrays(battle.level.enemies.hp.length);
     this.eSeen.fill(0);
@@ -248,6 +246,15 @@ export class BattleRenderer {
     this.camPos.set(0, cfg.game.camera.height, battle.crowd.z - cfg.game.camera.back);
     this.camLook.set(0, 0, battle.crowd.z + cfg.game.camera.lookAhead);
     this.bossFocus = 0;
+  }
+
+  private instanced(geo: THREE.BufferGeometry, mat: THREE.Material, cap: number): THREE.InstancedMesh {
+    const mesh = new THREE.InstancedMesh(geo, mat, cap);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.frustumCulled = false;
+    mesh.count = 0;
+    this.level.add(mesh);
+    return mesh;
   }
 
   private ensureEnemyArrays(n: number): void {
@@ -336,7 +343,7 @@ export class BattleRenderer {
       switch (e.t) {
         case 'shot': {
           this.tracers.spawn(e.fx, 0.65, e.fz, e.tx, e.ty, e.tz, e.leader ? C_TRACER_LEADER : C_TRACER);
-          this.sparks.burst(e.fx, 0.7, e.fz + 0.25, { count: 1, color: C_FLASH, speed: 0.4, size: e.leader ? 0.6 : 0.35, life: 0.06, drag: 8 });
+          this.sparks.burst(e.fx, 0.7, e.fz + 0.3, { count: 1, color: C_FLASH, speed: 0.4, size: e.leader ? 0.9 : 0.55, life: 0.07, drag: 8 });
           if (e.leader || Math.random() < 0.3) this.smoke.burst(e.fx + 0.15, 0.7, e.fz, { count: 1, color: C_BRASS, speed: 1.6, up: 2.2, size: 0.07, life: 0.45, gravity: 9, drag: 1 });
           this.shake = Math.min(0.35, this.shake + cfg.weapons.shakeByClass[e.cls as Weapon['class']] * (e.leader ? 1 : 0.12));
           break;
@@ -424,7 +431,8 @@ export class BattleRenderer {
     this.dmgFlushT -= dt;
     if (this.dmgFlushT > 0) return;
     this.dmgFlushT = 0.22;
-    for (const c of this.dmgCells.values()) {
+    const cells = [...this.dmgCells.values()].sort((a, b) => Number(b.crit) - Number(a.crit) || b.sum - a.sum).slice(0, this.cfg.game.render.maxDamageNumbersPerFlush);
+    for (const c of cells) {
       if (c.sum > 0) this.overlay.spawnDamage(c.x, c.y, c.z, String(Math.round(c.sum)), c.crit ? 'crit' : '');
       else if (c.blocked) this.overlay.spawnDamage(c.x, c.y, c.z, 'BLOCK', 'blocked');
     }
@@ -506,7 +514,12 @@ export class BattleRenderer {
       u.value += (runAmt - u.value) * Math.min(1, dt * 6);
     }
     const nVar = this.crewMeshes.length;
-    const counts = new Array(nVar).fill(0);
+    for (const m of this.crewMeshes) m.nHi = m.nLo = 0;
+    const lodZ = this.camera.position.z + cfg.game.render.lodDistance;
+    // obstacles the blob overlaps: units get nudged out of their footprint
+    const blockers: ObstacleRT[] = [];
+    for (const o of battle.level.obstacles)
+      if (o.alive && o.z > this.crowdZ - 30 && o.z < this.crowdZ + 6 && blockers.length < 8) blockers.push(o);
     for (let i = 1; i < count; i++) {
       this.dispX[i] += (this.targets[i * 2] - this.dispX[i]) * k;
       this.dispZ[i] += (this.targets[i * 2 + 1] - this.dispZ[i]) * k;
@@ -514,18 +527,25 @@ export class BattleRenderer {
       let x = this.crowdX + this.dispX[i];
       const z = this.crowdZ + this.dispZ[i];
       if (lock && z > lock.wall.z0 && z < lock.wall.z1) x = Math.max(lo, Math.min(hi, x));
+      for (const o of blockers) {
+        const hw = o.halfW + 0.15;
+        if (Math.abs(z - o.z) < o.halfD + 0.2 && Math.abs(x - o.x) < hw) x = x < o.x ? o.x - hw : o.x + hw;
+      }
       x = Math.max(-roadHalf, Math.min(roadHalf, x));
       const s = this.pop[i] < 1 ? easeOutBack(this.pop[i]) : 1;
       tmpP.set(x, 0, z);
       tmpS.set(s, s, s);
       tmpM.compose(tmpP, FACE_FWD, tmpS);
-      const v = i % nVar;
-      this.crewMeshes[v].setMatrixAt(counts[v]++, tmpM);
+      const m = this.crewMeshes[i % nVar];
+      if (z > lodZ) m.lo.setMatrixAt(m.nLo++, tmpM);
+      else m.hi.setMatrixAt(m.nHi++, tmpM);
     }
-    this.crewMeshes.forEach((m, v) => {
-      m.count = counts[v];
-      m.instanceMatrix.needsUpdate = true;
-    });
+    for (const m of this.crewMeshes) {
+      m.hi.count = m.nHi;
+      m.lo.count = m.nLo;
+      m.hi.instanceMatrix.needsUpdate = true;
+      m.lo.instanceMatrix.needsUpdate = true;
+    }
     if (this.leader && this.leaderMat && this.leaderRing) {
       this.leaderMat.userData.uniforms.uTime.value = this.time;
       const u = this.leaderMat.userData.uniforms.uRun;
@@ -543,7 +563,8 @@ export class BattleRenderer {
   private updateEnemies(battle: Battle, dt: number): void {
     const e = battle.level.enemies;
     this.ensureEnemyArrays(e.hp.length);
-    for (const m of this.enemyMeshes.values()) m.n = 0;
+    for (const m of this.enemyMeshes.values()) m.nHi = m.nLo = 0;
+    const lodZ = this.camera.position.z + this.cfg.game.render.lodDistance;
     const k = Math.min(1, dt * 7);
     let anyAdvancing = false;
     for (const h of battle.level.hordes) if (h.state === 'advancing') anyAdvancing = true;
@@ -559,16 +580,24 @@ export class BattleRenderer {
       this.eDispZ[i] += (e.z[i] - this.eDispZ[i]) * k;
       if (this.eDispZ[i] < camZ - 2 || this.eDispZ[i] > camZ + 150) continue;
       const m = this.enemyMeshes.get(e.defIndex[i]);
-      if (!m || m.n >= m.mesh.instanceMatrix.count) continue;
+      if (!m) continue;
+      const far = this.eDispZ[i] > lodZ;
+      const mesh = far ? m.lo : m.hi;
+      const n = far ? m.nLo : m.nHi;
+      if (n >= mesh.instanceMatrix.count) continue;
       const def = battle.level.enemyDefs[e.defIndex[i]];
       tmpP.set(this.eDispX[i], 0, this.eDispZ[i]);
       tmpS.setScalar(def.scale);
       tmpM.compose(tmpP, FACE_BACK, tmpS);
-      m.mesh.setMatrixAt(m.n++, tmpM);
+      mesh.setMatrixAt(n, tmpM);
+      if (far) m.nLo++;
+      else m.nHi++;
     }
     for (const m of this.enemyMeshes.values()) {
-      m.mesh.count = m.n;
-      m.mesh.instanceMatrix.needsUpdate = true;
+      m.hi.count = m.nHi;
+      m.lo.count = m.nLo;
+      m.hi.instanceMatrix.needsUpdate = true;
+      m.lo.instanceMatrix.needsUpdate = true;
       m.mat.userData.uniforms.uTime.value = this.time;
       const u = m.mat.userData.uniforms.uRun;
       u.value += ((anyAdvancing ? 0.8 : 0.1) - u.value) * Math.min(1, dt * 5);
@@ -728,7 +757,8 @@ export class BattleRenderer {
     const o = this.overlay;
     o.begin();
     const crowdTop = this.project(this.crowdX, 2.3 * this.cfg.game.crowd.leaderScale, this.crowdZ);
-    if (crowdTop && battle.crewCount > 0) o.label('crew', crowdTop.x, crowdTop.y, String(battle.crewCount));
+    const c = battle.crowd;
+    if (crowdTop && battle.crewCount > 0) o.label('crew', crowdTop.x, crowdTop.y, String(battle.crewCount), c.leaderHp < c.leaderMaxHp ? c.leaderHp / c.leaderMaxHp : -1);
     for (const h of battle.level.hordes) {
       if (h.state === 'dead' || h.alive === 0) continue;
       const depth = Math.ceil(h.alive / h.columns) * this.cfg.game.horde.spacing;

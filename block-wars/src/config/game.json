@@ -93,10 +93,13 @@
     "maxParticles": 1500,
     "maxDamageNumbers": 40,
     "maxLabels": 48,
-    "tracerLife": 0.09,
+    "tracerLife": 0.13,
     "damageNumberLife": 0.7,
     "pixelRatioCap": 2,
-    "shadows": false
+    "shadows": false,
+    "lodDistance": 24,
+    "maxDamageNumbersPerFlush": 6,
+    "tracerWidth": 0.1
   },
   "input": {
     "dragMetersPerScreen": 13

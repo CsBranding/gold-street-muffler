@@ -25,6 +25,30 @@
       ],
       "additionalProperties": false
     },
+    "autoBoss": {
+      "type": "object",
+      "properties": {
+        "finalBossId": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "rivalMiniBossId": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "rivalMiniBossLevel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "finalBossId",
+        "rivalMiniBossId",
+        "rivalMiniBossLevel"
+      ],
+      "additionalProperties": false
+    },
     "maps": {
       "minItems": 1,
       "type": "array",
@@ -1056,6 +1080,7 @@
   "required": [
     "version",
     "difficulty",
+    "autoBoss",
     "maps"
   ],
   "additionalProperties": false

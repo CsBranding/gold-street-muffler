@@ -466,6 +466,10 @@ export const GameFileSchema = z.object({
     maxDamageNumbers: z.number().int().positive(),
     maxLabels: z.number().int().positive(),
     tracerLife: pos,
+    tracerWidth: pos,
+    /** units farther than this from the camera use the low-detail mesh */
+    lodDistance: pos,
+    maxDamageNumbersPerFlush: z.number().int().positive(),
     damageNumberLife: pos,
     pixelRatioCap: pos,
     shadows: z.boolean(),
