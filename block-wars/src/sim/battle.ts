@@ -26,10 +26,13 @@ export type SimEvent =
   | { t: 'bossEnrage' }
   | { t: 'bossDefeated'; x: number; z: number; loot: number }
   | { t: 'leaderHit'; dmg: number }
+  | { t: 'hazard'; kind: 'spotlight' | 'drive_by'; phase: 'telegraph' | 'active' | 'done' }
   | { t: 'won' }
   | { t: 'failed' };
 
 export type Phase = 'run' | 'blocked' | 'hold' | 'push' | 'boss' | 'done';
+/** All-Out: which side the crew prioritizes */
+export type Focus = 'nearest' | 'police' | 'rival';
 
 export interface BattleStats {
   kills: number;
@@ -69,6 +72,9 @@ export class Battle {
   buffs = { lowrider: 0, dirtBike: 0, armor: false };
   pickups: PickupRT[] = [];
   laneLock: { wall: LaneWallRT; lane: number } | null = null;
+  focus: Focus = 'nearest';
+  /** crew damage multiplier this tick (helicopter spotlight) */
+  private exposure = 1;
 
   private weapons: Map<string, Weapon>;
   private enemyDefs: EnemyDef[];
@@ -161,8 +167,10 @@ export class Battle {
     this.gatherTargets();
     this.fireSquad(dt);
     this.fireLeader(dt);
-    let dmgIn = this.enemyAttacks(dt);
+    let dmgIn = this.updateHazards(dt);
+    dmgIn += this.enemyAttacks(dt);
     if (boss) dmgIn += this.updateBoss(dt);
+    dmgIn *= this.exposure;
     this.applyCrewDamage(dmgIn, 'fire');
     this.compactHordes();
     this.updateBanners();
@@ -248,7 +256,13 @@ export class Battle {
       const dist = h.anchorZ - front;
       if (h.state === 'idle' && dist <= g.horde.aggroRange) h.state = 'advancing';
       if (h.state === 'idle') continue;
-      if (dist <= c.engageRange) {
+      if (h.rooftop) {
+        // ledge shooters never block the road; once passed they're out of the fight
+        if (h.anchorZ < this.crowd.z - this.ext.back - 3) this.retireHorde(h);
+        continue;
+      }
+      // hold where the squad weapon can actually reach (shotguns step in closer)
+      if (dist <= Math.min(c.engageRange, this.squad.weapon.rangeM - 1)) {
         h.engaged = true;
         engaged = engaged ?? h;
       }
@@ -289,6 +303,15 @@ export class Battle {
     this.crowd.prevZ = this.crowd.z;
     const newFront = Math.min(front + speed * dt, Math.max(front, maxFront));
     this.crowd.z += newFront - front;
+  }
+
+  private retireHorde(h: HordeRT): void {
+    const e = this.level.enemies;
+    for (const idx of h.units) e.alive[idx] = 0;
+    h.alive = 0;
+    h.hp = 0;
+    h.state = 'dead';
+    h.engaged = false;
   }
 
   private layoutHorde(h: HordeRT): void {
@@ -427,7 +450,8 @@ export class Battle {
     const oz = this.front;
     const hw = this.ext.halfWidth;
     const tanCone = Math.tan(c.targetConeDeg * DEG);
-    const consider = (kind: number, idx: number, x: number, z: number, halfW: number) => {
+    const focusSide = this.loadout.mode === 'all_out' && this.focus !== 'nearest' ? this.focus : null;
+    const consider = (kind: number, idx: number, x: number, z: number, halfW: number, penalty = 0) => {
       const dz = z - oz;
       if (dz < -1.5) return;
       const dx = x - ox;
@@ -435,13 +459,17 @@ export class Battle {
       if (dist > range) return;
       const lat = Math.max(0, Math.abs(dx) - halfW - hw);
       if (lat > Math.max(0, dz) * tanCone + 1) return;
-      this.pushCandidate(kind, idx, x, z, dist, dist + lat * c.lateralTargetPenalty);
+      this.pushCandidate(kind, idx, x, z, dist, dist + lat * c.lateralTargetPenalty + penalty);
     };
     for (const o of this.level.obstacles) if (o.alive && this.obstacleReachable(o)) consider(K_OBSTACLE, o.id, o.x, o.z - o.halfD, o.halfW);
     const e = this.level.enemies;
     for (const h of this.level.hordes) {
       if (h.state === 'idle' || h.state === 'dead') continue;
-      for (const idx of h.units) if (e.alive[idx]) consider(K_ENEMY, idx, e.x[idx], e.z[idx], 0.3);
+      for (const idx of h.units) {
+        if (!e.alive[idx]) continue;
+        const pen = focusSide && this.enemyDefs[e.defIndex[idx]].side !== focusSide ? this.cfg.game.allOut.focusPenalty : 0;
+        consider(K_ENEMY, idx, e.x[idx], e.z[idx], 0.3, pen);
+      }
     }
     const b = this.level.boss;
     if (b && b.state === 'fighting') consider(K_BOSS, 0, b.x, b.z - 1.5, 1.5);
@@ -569,7 +597,7 @@ export class Battle {
     }
   }
 
-  private damageEnemy(idx: number, dmg: number, crit: boolean, sx: number, sz: number, w: Weapon | null, show: boolean): void {
+  private damageEnemy(idx: number, dmg: number, crit: boolean, sx: number, sz: number, w: Weapon | null, show: boolean, credit = true): void {
     const e = this.level.enemies;
     if (!e.alive[idx]) return;
     const def = this.enemyDefs[e.defIndex[idx]];
@@ -597,18 +625,20 @@ export class Battle {
         h.slowTimer = 0.3;
       }
     }
-    if (e.hp[idx] <= 0.001) this.killEnemy(idx);
+    if (e.hp[idx] <= 0.001) this.killEnemy(idx, credit);
   }
 
-  private killEnemy(idx: number): void {
+  private killEnemy(idx: number, credit = true): void {
     const e = this.level.enemies;
     e.alive[idx] = 0;
     const h = this.level.hordes[e.horde[idx]];
     const def = this.enemyDefs[e.defIndex[idx]];
     h.hp -= e.shield[idx] + Math.max(0, e.hp[idx]);
     h.alive--;
-    this.stats.kills++;
-    this.stats.cash += def.cash;
+    if (credit) {
+      this.stats.kills++;
+      this.stats.cash += def.cash;
+    }
     this.compact.add(h.id);
     this.events.push({ t: 'kill', x: e.x[idx], z: e.z[idx], defIndex: e.defIndex[idx] });
     if (h.alive <= 0) {
@@ -650,8 +680,33 @@ export class Battle {
     const fz = this.front;
     let dmg = 0;
     const tier = this.cfg.weapons.levelDamageMult[this.squad.level - 1];
+    const allOut = this.loadout.mode === 'all_out';
+    const ao = this.cfg.game.allOut;
+    const boss = this.level.boss;
     for (const h of this.level.hordes) {
       if (h.state === 'idle' || h.state === 'dead') continue;
+      // All-Out: police and rival units sharing a horde trade fire with each other
+      let split = 1;
+      if (allOut) {
+        let pol = 0;
+        let riv = 0;
+        for (const idx of h.units) {
+          if (!e.alive[idx]) continue;
+          const d = this.enemyDefs[e.defIndex[idx]];
+          if (d.side === 'police') pol += d.dps + d.meleeDps;
+          else riv += d.dps + d.meleeDps;
+        }
+        if (pol > 0 && riv > 0) {
+          split = 1 - ao.infightMult;
+          this.infight(h, 'rival', pol * ao.infightMult * dt);
+          this.infight(h, 'police', riv * ao.infightMult * dt);
+        }
+        // rival raiders also go after Big Sarge
+        if (riv > 0 && boss && boss.state === 'fighting' && Math.abs(h.anchorZ - boss.z) < 14) {
+          boss.hp -= riv * ao.bossDamageMult * dt;
+          if (boss.hp <= 0) this.killBoss();
+        }
+      }
       const contact = h.state === 'contact';
       const frontage = Math.max(1, Math.min(h.columns, Math.ceil((this.ext.halfWidth * 2) / this.cfg.game.horde.spacing)));
       for (const idx of h.units) {
@@ -660,9 +715,9 @@ export class Battle {
         if (def.dps > 0) {
           const dx = e.x[idx] - fx;
           const dz = e.z[idx] - fz;
-          if (dx * dx + dz * dz <= def.rangeM * def.rangeM) dmg += def.dps * dt;
+          if (dx * dx + dz * dz <= def.rangeM * def.rangeM) dmg += def.dps * dt * split;
         }
-        if (contact && e.slot[idx] < frontage) dmg += def.meleeDps * dt;
+        if (contact && e.slot[idx] < frontage) dmg += def.meleeDps * dt * split;
       }
       if (contact) {
         // Crew brawls the front row: melee scales with frontage and squad tier.
@@ -680,6 +735,78 @@ export class Battle {
       }
     }
     return dmg;
+  }
+
+  /** spend `budget` damage on the front-most living units of `side` in horde h (no player credit) */
+  private infight(h: HordeRT, side: 'police' | 'rival', budget: number): void {
+    const e = this.level.enemies;
+    for (const idx of h.units) {
+      if (budget <= 0) return;
+      if (!e.alive[idx] || this.enemyDefs[e.defIndex[idx]].side !== side) continue;
+      const take = Math.min(budget, e.hp[idx] + e.shield[idx]);
+      budget -= take;
+      const fromShield = Math.min(e.shield[idx], take);
+      e.shield[idx] -= fromShield;
+      h.hp -= fromShield;
+      this.damageEnemy(idx, take - fromShield, false, e.x[idx], e.z[idx] - 100, null, false, false);
+    }
+  }
+
+  // ---------------------------------------------------------------- hazards
+  private updateHazards(dt: number): number {
+    this.exposure = 1;
+    let dmg = 0;
+    const g = this.cfg.game;
+    const half = g.road.width / 2;
+    for (const hz of this.level.hazards) {
+      if (hz.state === 'done') continue;
+      const def = this.enemyDefs[hz.defIndex];
+      const spec = def.hazard!;
+      if (hz.state === 'waiting') {
+        if (this.crowd.z < hz.z0) continue;
+        hz.state = 'telegraph';
+        hz.t = 0;
+        if (hz.kind === 'drive_by') {
+          // aim down the lane the crew is in, warned by headlights + horn
+          const lw = g.road.width / 3;
+          const lane = Math.max(0, Math.min(2, Math.floor((this.crowd.x + half) / lw)));
+          hz.x0 = -half + lane * lw;
+          hz.x1 = hz.x0 + lw;
+          hz.x = (hz.x0 + hz.x1) / 2;
+          hz.z = this.front + 45;
+        } else hz.x = -half * 0.75;
+        this.events.push({ t: 'hazard', kind: hz.kind, phase: 'telegraph' });
+      }
+      hz.t += dt;
+      if (hz.state === 'telegraph') {
+        if (hz.kind === 'spotlight') hz.z = this.crowd.z + 4;
+        else hz.z = this.front + 45;
+        if (hz.t >= spec.telegraphSec) {
+          hz.state = 'active';
+          hz.t = 0;
+          this.events.push({ t: 'hazard', kind: hz.kind, phase: 'active' });
+        }
+        continue;
+      }
+      // active
+      if (hz.kind === 'spotlight') {
+        hz.x = Math.sin(hz.t * g.hazards.spotlightSweepSpeed) * half * 0.75;
+        hz.z = this.crowd.z + 4;
+        if (Math.abs(this.crowd.x - hz.x) < g.hazards.spotlightWidth / 2 + this.ext.halfWidth * 0.4) this.exposure = Math.max(this.exposure, spec.damageTakenMult);
+        if (this.crowd.z > hz.z1 || hz.t > spec.durationSec * 3) this.finishHazard(hz);
+      } else {
+        hz.z -= g.hazards.driveBySpeed * dt;
+        const inLane = this.crowd.x > hz.x0 - this.ext.halfWidth * 0.3 && this.crowd.x < hz.x1 + this.ext.halfWidth * 0.3;
+        if (inLane && hz.z < this.front + 4 && hz.z > this.crowd.z - this.ext.back - 2) dmg += spec.dps * dt;
+        if (hz.z < this.crowd.z - this.ext.back - 10) this.finishHazard(hz);
+      }
+    }
+    return dmg;
+  }
+
+  private finishHazard(hz: CompiledLevel['hazards'][number]): void {
+    hz.state = 'done';
+    this.events.push({ t: 'hazard', kind: hz.kind, phase: 'done' });
   }
 
   private applyCrewDamage(dmg: number, cause: 'fire' | 'gas' | 'melee'): void {
@@ -730,6 +857,7 @@ export class Battle {
       if (this.front >= b.z - b.def.standoffM - 1.5) {
         b.state = 'fighting';
         b.attackTimer = b.def.attackIntervalSec * 0.6;
+        if (this.loadout.mode === 'all_out' && b.def.side === 'police') this.spawnRivalRaiders();
       }
       return 0;
     }
@@ -890,6 +1018,7 @@ export class Battle {
         maxHp: 0,
         pickups: [],
         pickupsReleased: true,
+        rooftop: false,
       };
       let slot = 0;
       let speed = 0;
@@ -906,6 +1035,25 @@ export class Battle {
       h.alive = h.total = h.units.length;
       h.hp = h.maxHp;
       h.speed = speed / h.units.length;
+      if (this.loadout.mode === 'all_out') {
+        // mix the backup into a living rival raider horde so the two sides fight
+        const raid = this.level.hordes.find((x) => x.state !== 'dead' && x.units.some((i) => this.level.enemies.alive[i] && this.enemyDefs[this.level.enemies.defIndex[i]].side === 'rival'));
+        if (raid) {
+          for (const idx of h.units) {
+            this.level.enemies.horde[idx] = raid.id;
+            raid.units.push(idx);
+          }
+          raid.alive += h.alive;
+          raid.total += h.total;
+          raid.hp += h.hp;
+          raid.maxHp += h.maxHp;
+          raid.units.forEach((idx, s2) => (this.level.enemies.slot[idx] = s2));
+          this.layoutHorde(raid);
+          h.units = [];
+          h.alive = 0;
+          h.state = 'dead';
+        }
+      }
       this.level.hordes.push(h);
       this.layoutHorde(h);
     }
@@ -932,6 +1080,28 @@ export class Battle {
         });
       }
     });
+  }
+
+  /** All-Out: a rival crew crashes the boss fight. They hit Big Sarge and the player alike. */
+  private spawnRivalRaiders(): void {
+    const b = this.level.boss!;
+    const n = this.cfg.game.allOut.bossRivalCount;
+    const di = this.enemyDefs.findIndex((d) => d.side === 'rival' && d.role === 'unit' && d.dps > 0);
+    if (di < 0 || n <= 0) return;
+    const def = this.enemyDefs[di];
+    // the backup cops share the horde so the two sides brawl
+    const h: HordeRT = {
+      id: this.level.hordes.length, segZ: b.z, anchorZ: b.z - 5, x: -Math.sign(b.x || 1) * 2, columns: 8, units: [], alive: 0, total: 0,
+      state: 'advancing', speed: def.speed * 0.4, slowMult: 1, slowTimer: 0, engaged: true, pushing: false, hp: 0, maxHp: 0, pickups: [], pickupsReleased: true, rooftop: false,
+    };
+    for (let i = 0; i < n; i++) {
+      h.units.push(addEnemy(this.level.enemies, di, def, h.id, i));
+      h.maxHp += def.hp;
+    }
+    h.alive = h.total = n;
+    h.hp = h.maxHp;
+    this.level.hordes.push(h);
+    this.layoutHorde(h);
   }
 
   private killBoss(): void {

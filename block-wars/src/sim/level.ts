@@ -67,6 +67,15 @@ export function resolveBossId(cfg: GameConfig, bossId: string, mode: BattleMode,
   return ab.finalBossId;
 }
 
+function hordeLayout(out: CompiledLevel, h: HordeRT, spacing: number): void {
+  const p = { x: 0, z: 0 };
+  for (const idx of h.units) {
+    hordeSlotOffset(out.enemies.slot[idx], h.columns, spacing, p);
+    out.enemies.x[idx] = h.x + p.x;
+    out.enemies.z[idx] = h.anchorZ + p.z;
+  }
+}
+
 /** Hordes form in a packed block; front row (row 0) faces the crew. */
 export function hordeSlotOffset(slot: number, columns: number, spacing: number, out: { x: number; z: number }): void {
   const col = slot % columns;
@@ -93,6 +102,7 @@ export function compileLevel(cfg: GameConfig, map: MapDef, level: LevelDef, mode
     hordes: [],
     banners: [],
     boss: null,
+    hazards: [],
     enemies: createEnemyStore(512),
     enemyDefs,
     difficulty: scale,
@@ -169,7 +179,7 @@ export function compileLevel(cfg: GameConfig, map: MapDef, level: LevelDef, mode
         const h: HordeRT = {
           id: hordeId,
           segZ: z0,
-          anchorZ: z0 + g.road.hordeOffset,
+          anchorZ: z0 + g.road.hordeOffset + seg.offset,
           x: 0,
           columns: seg.columns,
           units: [],
@@ -185,7 +195,10 @@ export function compileLevel(cfg: GameConfig, map: MapDef, level: LevelDef, mode
           maxHp: 0,
           pickups: seg.pickups.map((pk) => ({ ...pk, x: pk.x * half })),
           pickupsReleased: false,
+          rooftop: false,
         };
+        const blockW = (seg.columns - 1) * g.horde.spacing;
+        h.x = Math.max(-half + blockW / 2 + 0.3, Math.min(half - blockW / 2 - 0.3, seg.x * half));
         let slot = 0;
         let speedSum = 0;
         for (const entry of seg.enemies) {
@@ -210,7 +223,18 @@ export function compileLevel(cfg: GameConfig, map: MapDef, level: LevelDef, mode
         h.alive = h.total = h.units.length;
         h.hp = h.maxHp;
         h.speed = speedSum / h.units.length;
+        h.rooftop = h.speed === 0;
+        if (h.rooftop) h.x = Math.sign(seg.x || 1) * (half + 0.9);
+        hordeLayout(out, h, g.horde.spacing);
         out.hordes.push(h);
+        z += seg.length;
+        break;
+      }
+      case 'hazard': {
+        const id = resolveEnemyId(cfg, seg.enemyId, seg.side, mode, 0);
+        const di = defIdx.get(id)!;
+        const hz = enemyDefs[di].hazard;
+        if (hz) out.hazards.push({ id: out.hazards.length, kind: hz.kind, defIndex: di, z0, z1: z0 + seg.length, state: 'waiting', t: 0, x: 0, z: 0, x0: 0, x1: 0 });
         z += seg.length;
         break;
       }

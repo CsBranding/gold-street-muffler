@@ -128,6 +128,63 @@ describe('levels', () => {
   });
 });
 
+describe('all maps and modes', () => {
+  const modes = ['vs_cops', 'vs_rival', 'all_out'] as const;
+  for (const m of cfg.levels.maps.filter((x) => x.levels.length)) {
+    for (const mode of modes) {
+      it(`${m.id} is beatable in ${mode} under the time cap`, () => {
+        for (const level of m.levels) {
+          const b = new Battle(cfg, m, level, loadout(mode), 7);
+          for (let i = 0; i < cfg.game.runCap.maxLevelSec * cfg.game.sim.tickHz && b.status === 'running'; i++) {
+            b.setSteerTarget(botSteer(b));
+            b.step();
+            b.drainEvents();
+          }
+          expect(b.status, `${m.id} L${level.number}`).toBe('won');
+        }
+      });
+    }
+  }
+  it('vs rival resolves the mid-chapter mini boss to Big Homie, final to Big Sarge', () => {
+    const hood = cfg.levels.maps.find((m) => m.id === 'hood_block')!;
+    const l5 = hood.levels.find((l) => l.number === cfg.levels.autoBoss.rivalMiniBossLevel)!;
+    expect(new Battle(cfg, hood, l5, loadout('vs_rival'), 1).level.boss!.def.id).toBe('big_homie');
+    expect(new Battle(cfg, map, map.levels.find((l) => l.number === 10)!, loadout('vs_rival'), 1).level.boss!.def.id).toBe('big_sarge');
+  });
+  it('all out spawns both sides and they thin each other out without the player', () => {
+    const level = structuredClone(map.levels[0]);
+    level.segments = [
+      { kind: 'gap', length: 4 },
+      { kind: 'horde', length: 60, side: 'enemy', columns: 10, enemies: [{ enemyId: 'patrol_officer', count: 80 }], pickups: [], x: 0, offset: 0 },
+    ];
+    const b = new Battle(cfg, map, level, loadout('all_out'), 2);
+    const e = b.level.enemies;
+    const sides = new Set<string>();
+    for (let i = 0; i < e.count; i++) sides.add(b.level.enemyDefs[e.defIndex[i]].side);
+    expect([...sides].sort()).toEqual(['police', 'rival']);
+    b.crowd.z = -500; // keep the crew out of it
+    const h = b.level.hordes[0];
+    h.state = 'advancing';
+    const before = h.alive;
+    for (let i = 0; i < 300; i++) b.step();
+    expect(h.alive).toBeLessThan(before);
+    expect(b.stats.kills).toBe(0);
+  });
+  it('focus steers fire toward the chosen side', () => {
+    const b = new Battle(cfg, map, map.levels[0], loadout('all_out'), 3);
+    b.focus = 'rival';
+    expect(b.focus).toBe('rival');
+  });
+  it('helicopter spotlight raises damage taken; drive-by hits the lane', () => {
+    const hood = cfg.levels.maps.find((m) => m.id === 'hood_block')!;
+    const lvl = hood.levels.find((l) => l.segments.some((s) => s.kind === 'hazard'))!;
+    const cops = new Battle(cfg, hood, lvl, loadout('vs_cops'), 1);
+    const rival = new Battle(cfg, hood, lvl, loadout('vs_rival'), 1);
+    expect(cops.level.hazards[0].kind).toBe('spotlight');
+    expect(rival.level.hazards[0].kind).toBe('drive_by');
+  });
+});
+
 describe('boss', () => {
   it('Big Sarge telegraphs every attack 0.8–1.2s and enrages', () => {
     const b = play(10, 5, 'vs_cops', 2);
@@ -156,7 +213,7 @@ describe('performance', () => {
     const level = structuredClone(map.levels[0]);
     level.segments = [
       { kind: 'gap', length: 4 },
-      { kind: 'horde', length: 60, side: 'enemy', columns: 14, enemies: [{ enemyId: 'patrol_officer', count: 1200 }, { enemyId: 'riot_cop', count: 300 }], pickups: [] },
+      { kind: 'horde', length: 60, side: 'enemy', columns: 14, enemies: [{ enemyId: 'patrol_officer', count: 1200 }, { enemyId: 'riot_cop', count: 300 }], pickups: [], x: 0, offset: 0 },
     ];
     const b = new Battle(cfg, { ...map, unlockOrder: 0 }, { ...level, number: 1 }, loadout(), 9);
     b.crowd.followers = 499;

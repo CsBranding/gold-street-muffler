@@ -51,7 +51,7 @@ export function botSteer(b: Battle): number {
         if (!o.alive || o.z < w.z0 || o.z > w.z1 || o.x < x0 || o.x > x1) continue;
         if (o.kind === 'barricade') score -= o.hp * 0.05;
         else if (o.reward?.kind === 'recruits') score += o.reward.count;
-        else if (o.reward?.kind === 'weapon') score += 8;
+        else if (o.reward?.kind === 'weapon') score += count; // a better gun is worth about doubling the crew
       }
       if (score > bestScore) {
         bestScore = score;

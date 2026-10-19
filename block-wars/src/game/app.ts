@@ -290,7 +290,7 @@ export class App {
       ...map.levels[0],
       segments: [
         { kind: 'gap', length: 6 },
-        { kind: 'horde', length: 80, side: 'enemy', columns: 14, enemies: [{ enemyId: 'riot_cop', count: 300 }, { enemyId: 'patrol_officer', count: 1200 }], pickups: [] },
+        { kind: 'horde', length: 80, side: 'enemy', columns: 14, enemies: [{ enemyId: 'riot_cop', count: 300 }, { enemyId: 'patrol_officer', count: 1200 }], pickups: [], x: 0, offset: 0 },
       ],
     };
     this.play(map, level, true);

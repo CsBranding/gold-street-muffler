@@ -287,6 +287,17 @@ export const SegmentSchema = z.discriminatedUnion('kind', [
     columns: z.number().int().positive(),
     /** pickups that drop in mid-fight */
     pickups: z.array(z.object({ at: nonNeg, x: z.number().min(-1).max(1), reward: RewardSchema, rarity: RaritySchema })),
+    /** lateral center in half-road units (-1..1): flankers come up a side lane, rooftop shooters sit on the edge */
+    x: z.number().min(-1).max(1).default(0),
+    /** extra forward offset from the segment start (m) */
+    offset: nonNeg.default(0),
+  }),
+  z.object({
+    kind: z.literal('hazard'),
+    length: pos,
+    /** helicopter (spotlight) or lowrider_driveby; resolved by battle mode like hordes */
+    enemyId: id,
+    side: z.enum(['enemy', 'police', 'rival']),
   }),
   z.object({
     kind: z.literal('boss'),
@@ -437,6 +448,8 @@ export const GameFileSchema = z.object({
     pushThreshold: pos,
     flankDistance: nonNeg,
     pickupDriftSpeed: nonNeg,
+    /** rooftop shooters stand this high above the road */
+    rooftopHeight: nonNeg,
     pushbackOnRevive: nonNeg,
   }),
   pickups: z.object({
@@ -507,6 +520,21 @@ export const GameFileSchema = z.object({
     }),
   }),
   runCap: z.object({ maxLevelSec: pos }),
+  allOut: z.object({
+    /** fraction of each side's dps that goes into the other side when both share a horde */
+    infightMult: frac,
+    /** rival raiders that show up to fight Big Sarge */
+    bossRivalCount: z.number().int().min(0),
+    /** rival dps multiplier against the boss */
+    bossDamageMult: nonNeg,
+    /** target score penalty (m) for the side the player isn't focusing */
+    focusPenalty: nonNeg,
+  }),
+  hazards: z.object({
+    spotlightWidth: pos,
+    spotlightSweepSpeed: pos,
+    driveBySpeed: pos,
+  }),
   audio: z.object({ master: frac, sfx: frac, music: frac, bpm: pos, maxShotVoicesPerSec: pos }),
   feel: z.object({
     /** brief time-scale dip on big impacts */

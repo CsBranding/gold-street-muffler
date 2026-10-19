@@ -61,6 +61,24 @@ export interface HordeRT {
   maxHp: number;
   pickups: PickupSpawn[];
   pickupsReleased: boolean;
+  /** static shooters on a ledge at the road edge */
+  rooftop: boolean;
+}
+
+export interface HazardRT {
+  id: number;
+  kind: 'spotlight' | 'drive_by';
+  defIndex: number;
+  z0: number;
+  z1: number;
+  state: 'waiting' | 'telegraph' | 'active' | 'done';
+  t: number;
+  /** spotlight center / drive-by car position */
+  x: number;
+  z: number;
+  /** drive-by lane bounds */
+  x0: number;
+  x1: number;
 }
 
 export interface PickupSpawn {
@@ -153,6 +171,7 @@ export interface CompiledLevel {
   hordes: HordeRT[];
   banners: BannerMarkRT[];
   boss: BossRT | null;
+  hazards: HazardRT[];
   enemies: EnemyStore;
   enemyDefs: EnemyDef[];
   difficulty: number;
