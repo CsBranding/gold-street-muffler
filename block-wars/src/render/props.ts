@@ -2,6 +2,24 @@
 import * as THREE from 'three';
 import type { ObstacleRT } from '../sim/world';
 import { toonGradient } from './vat';
+import { kayKitProp } from './kaykit';
+
+/** Fit a KayKit model to `width` across x, nose pointing at the crew (-z). Returns its fitted height and length. */
+function fitModel(g: THREE.Group, name: string, width: number, faceCrew: boolean): { h: number; len: number } | null {
+  const m = kayKitProp(name);
+  if (!m) return null;
+  const box = new THREE.Box3().setFromObject(m);
+  const size = box.getSize(new THREE.Vector3());
+  // cars are modeled along one horizontal axis; turn the long axis down the road
+  if (size.x > size.z) m.rotation.y = Math.PI / 2;
+  if (faceCrew) m.rotation.y += Math.PI;
+  const across = size.x > size.z ? size.z : size.x;
+  const k = width / across;
+  m.scale.setScalar(k);
+  m.position.y = -box.min.y * k;
+  g.add(m);
+  return { h: size.y * k, len: Math.max(size.x, size.z) * k };
+}
 
 const lam = (c: string) => new THREE.MeshToonMaterial({ color: c, gradientMap: toonGradient() });
 const M = {
@@ -17,6 +35,7 @@ const M = {
   red: new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2a3a').multiplyScalar(3) }),
   blue: new THREE.MeshBasicMaterial({ color: new THREE.Color('#2a7bff').multiplyScalar(3) }),
   metal: lam('#9aa0a8'),
+  headlight: new THREE.MeshBasicMaterial({ color: new THREE.Color('#fff4c8').multiplyScalar(2.5) }),
 };
 
 export function buildProp(o: ObstacleRT, factionColor: string): THREE.Group {
@@ -49,6 +68,7 @@ export function buildProp(o: ObstacleRT, factionColor: string): THREE.Group {
       break;
     }
     case 'dumpster': {
+      if (fitModel(g, 'dumpster', w, false) !== null) break;
       const box = new THREE.Mesh(new THREE.BoxGeometry(w, 1.2, 1.3), M.green);
       box.position.y = 0.6;
       const lid = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.1, 1.36), M.greenDark);
@@ -57,6 +77,22 @@ export function buildProp(o: ObstacleRT, factionColor: string): THREE.Group {
       break;
     }
     case 'cruiser': {
+      const fit = fitModel(g, 'car_police', w * 0.92, true);
+      if (fit) {
+        const { h, len } = fit;
+        for (const [name, mat, x] of [['lightR', M.red, -0.16], ['lightB', M.blue, 0.16]] as const) {
+          const bar = new THREE.Mesh(new THREE.BoxGeometry(w * 0.2, 0.14, 0.32), mat);
+          bar.position.set(x * w, h + 0.06, 0.1);
+          bar.name = name;
+          g.add(bar);
+        }
+        for (const x of [-0.3, 0.3]) {
+          const head = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.05), M.headlight);
+          head.position.set(x * w, h * 0.35, -len / 2 - 0.01);
+          g.add(head);
+        }
+        break;
+      }
       const body = new THREE.Mesh(new THREE.BoxGeometry(w, 0.6, 1.5), M.black);
       body.position.y = 0.45;
       const door = new THREE.Mesh(new THREE.BoxGeometry(w * 0.5, 0.42, 1.52), M.white);

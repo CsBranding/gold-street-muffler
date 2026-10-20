@@ -6,7 +6,11 @@
 import * as THREE from 'three';
 import { RiggedActor } from './crowds';
 import { buildSkinnedMesh, idlePoseClips, type Look } from './rig';
+import { kayKitActor, kayKitReady, specFromLook } from './kaykit';
 import { stylizedMaterial } from './vat';
+
+/** signature idle poses → the closest modeled clip */
+const KK_POSE: Record<string, string> = { lean_phone: 'relaxed', arms_crossed_sleeve: 'guard', hands_in_pockets: 'relaxed', chin_up: 'idle' };
 
 export class CharacterPreview {
   private renderer: THREE.WebGLRenderer;
@@ -72,12 +76,16 @@ export class CharacterPreview {
   }
 
   show(look: Look, pose: string, rim: string, dim = false): void {
-    if (this.actor) {
-      this.scene.remove(this.actor.mesh);
-      this.actor.mesh.geometry.dispose();
-    }
+    if (this.actor) this.scene.remove(this.actor.mesh);
     const mat = stylizedMaterial({ rim, rimStrength: 0.7 });
     if (dim) mat.color.setRGB(0.25, 0.25, 0.28);
+    if (kayKitReady()) {
+      const a = kayKitActor(specFromLook(look), mat);
+      this.scene.add(a.object);
+      this.actor = new RiggedActor(a.object, a.clips);
+      this.actor.play(KK_POSE[pose] ?? 'idle', 0);
+      return;
+    }
     const mesh = buildSkinnedMesh(look, 'hi', mat);
     this.scene.add(mesh);
     this.actor = new RiggedActor(mesh, idlePoseClips());

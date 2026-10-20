@@ -4,10 +4,11 @@
  *    VAT clips) plus a pool of knocked-down "corpses" that play the fall
  *    clip once and sink away. No gore, just a stylized knockdown.
  *  - BlobShadows: one instanced soft-shadow decal for every unit on screen.
- *  - RiggedActor: SkinnedMesh + AnimationMixer with crossfades (leader, bosses).
+ *  - RiggedActor: a skinned rig + AnimationMixer with crossfades (leader, bosses).
  */
 import * as THREE from 'three';
 import { humanoidClips, type Look } from './rig';
+import { bakeKayKitVat, kayKitReady, specFromLook } from './kaykit';
 import { bakeVat, setAnim, stylizedMaterial, vatInstanced, type StylizedUniforms, type VatAsset } from './vat';
 
 export type CrowdClip = 'run' | 'aim' | 'shoot' | 'fall' | 'cheer';
@@ -65,8 +66,10 @@ export class UnitFamily {
   private cLive = 0;
 
   constructor(parent: THREE.Object3D, look: Look, capacity: number, corpseCap: number, rim: string) {
-    this.hiAsset = vatAsset(look, 'hi');
-    this.loAsset = vatAsset(look, 'lo');
+    // modeled characters up close when available; the procedural rig stays as the far LOD / fallback
+    const modeled = kayKitReady() ? bakeKayKitVat(specFromLook(look)) : null;
+    this.hiAsset = modeled ?? vatAsset(look, 'hi');
+    this.loAsset = modeled ?? vatAsset(look, 'lo');
     this.farAsset = vatAsset(look, 'far');
     const mk = (a: VatAsset, cap: number) => {
       const mat = stylizedMaterial({ vat: a, rim, rimStrength: 0.45 });
@@ -212,7 +215,7 @@ export class RiggedActor {
   readonly mixer: THREE.AnimationMixer;
   private actions = new Map<string, THREE.AnimationAction>();
   current = '';
-  constructor(readonly mesh: THREE.SkinnedMesh, clipSet: Record<string, THREE.AnimationClip>) {
+  constructor(readonly mesh: THREE.Object3D, clipSet: Record<string, THREE.AnimationClip>) {
     this.mixer = new THREE.AnimationMixer(mesh);
     for (const [name, c] of Object.entries(clipSet)) this.actions.set(name, this.mixer.clipAction(c));
   }

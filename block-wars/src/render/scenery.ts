@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import { asphaltTexture, DISPLAY_FONT } from './textures';
 import { toonGradient } from './vat';
+import { hasKayKitProps, kayKitProp } from './kaykit';
 
 const toon = (color: string, extra: THREE.MeshToonMaterialParameters = {}) => new THREE.MeshToonMaterial({ color, gradientMap: toonGradient(), ...extra });
 
@@ -145,7 +146,9 @@ export function buildHoodBlock(group: THREE.Group, z0: number, z1: number, half:
   const bars: THREE.Matrix4[] = [];
   const postGeo = new THREE.CylinderGeometry(0.05, 0.05, 2.4, 6);
   const posts: THREE.Matrix4[] = [];
-  for (const s of [-1, 1]) {
+  const modeled = hasKayKitProps();
+  if (modeled) kayKitStreet(group, z0, z1, half, walkW, r);
+  for (const s of modeled ? [] : [-1, 1]) {
     let z = z0 + r() * 10;
     while (z < z1) {
       const x0 = s * (half + walkW + 0.4);
@@ -245,11 +248,42 @@ export function buildHoodBlock(group: THREE.Group, z0: number, z1: number, half:
 
   // old sedans parked along the curb
   const carColors = ['#8a8f96', '#6d5a48', '#a39a8a', '#5d6670', '#7a3b33', '#b8b2a6'];
-  for (let z = z0 + 10; z < z1; z += 14 + r() * 16) {
+  for (let z = z0 + 10; z < z1 && !modeled; z += 14 + r() * 16) {
     const s = r() < 0.5 ? -1 : 1;
     const car = sedan(carColors[Math.floor(r() * carColors.length)], r);
     car.position.set(s * (half + walkW + 3), 0.02, z);
     group.add(car);
+  }
+}
+
+/** Modeled street: building rows facing the road, streetlights, hydrants, benches, parked cars. */
+function kayKitStreet(group: THREE.Group, z0: number, z1: number, half: number, walkW: number, r: () => number): void {
+  const K = 5; // KayKit tile (2 units) → 10 m frontage
+  const place = (name: string, x: number, z: number, rotY: number, k: number) => {
+    const m = kayKitProp(name);
+    if (!m) return;
+    m.position.set(x, 0, z);
+    m.rotation.y = rotY;
+    m.scale.setScalar(k);
+    group.add(m);
+  };
+  const names = ['building_A', 'building_B', 'building_C', 'building_D', 'building_E', 'building_F', 'building_G', 'building_H'];
+  for (const s of [-1, 1]) {
+    // fronts face +z in the model: turn each one toward the road
+    const face = s < 0 ? Math.PI / 2 : -Math.PI / 2;
+    const x = s * (half + walkW + 0.3 + K);
+    for (let z = z0 - 20; z < z1 + 80; z += 2 * K + (r() < 0.25 ? 4 + r() * 4 : 0)) place(names[Math.floor(r() * names.length)], x, z + K, face, K);
+    // a second, taller row behind for depth
+    for (let z = z0 - 20; z < z1 + 120; z += 2 * K + 2) place(names[2 + Math.floor(r() * 6)], x + s * (2 * K + 6), z + K, face, K * 1.3);
+    for (let z = z0 + 4; z < z1 + 40; z += 16) place('streetlight', s * (half + 0.55), z, s < 0 ? Math.PI : 0, 5);
+    for (let z = z0 + 9; z < z1; z += 22 + r() * 18) place(r() < 0.5 ? 'firehydrant' : 'bench', s * (half + walkW - 0.6), z, face, 5);
+    for (let z = z0 + 3; z < z1; z += 11 + r() * 14) place(r() < 0.6 ? 'trash_A' : 'box_A', s * (half + walkW - 0.3 - r() * 0.8), z, r() * 6, 5);
+  }
+  // parked cars hugging the far side of the sidewalk, nose down the road
+  const cars = ['car_sedan', 'car_hatchback', 'car_taxi', 'car_stationwagon'];
+  for (let z = z0 + 12; z < z1; z += 16 + r() * 18) {
+    const s = r() < 0.5 ? -1 : 1;
+    place(cars[Math.floor(r() * cars.length)], s * (half + walkW + 1.6), z, r() < 0.5 ? 0 : Math.PI, 4.6);
   }
 }
 

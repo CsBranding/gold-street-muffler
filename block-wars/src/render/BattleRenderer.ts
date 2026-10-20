@@ -15,6 +15,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { BlobShadows, RiggedActor, UnitFamily, type CrowdClip } from './crowds';
+import { kayKitActor, kayKitReady, specFromLook } from './kaykit';
 import { Debris, Particles, Shockwaves, Tracers } from './effects';
 import { buildEnvironment, type Environment } from './environment';
 import { buildProp } from './props';
@@ -229,10 +230,12 @@ export class BattleRenderer {
     this.crew = variants.map((c) => new UnitFamily(this.level, lookFromOutfit(c.outfit, c.skinTone), cap, r.maxCorpses, faction.colors.primary));
     const leaderLook = lookFromOutfit(leaderChar.outfit, battle.loadout.cosmetic.skinTone ?? leaderChar.skinTone);
     if (battle.loadout.cosmetic.hat) leaderLook.hat = battle.loadout.cosmetic.hat as Look['hat'];
-    const leaderMesh = buildSkinnedMesh(leaderLook, 'hi', stylizedMaterial({ rim: faction.colors.primary, rimStrength: 0.6 }));
+    const leaderMat = stylizedMaterial({ rim: faction.colors.primary, rimStrength: 0.6 });
+    const leaderRig = this.rig(leaderLook, leaderMat, humanoidClips());
+    const leaderMesh = leaderRig.object;
     leaderMesh.scale.setScalar(cfg.game.crowd.leaderScale);
     leaderMesh.castShadow = true;
-    this.leader = new RiggedActor(leaderMesh, humanoidClips());
+    this.leader = new RiggedActor(leaderMesh, leaderRig.clips);
     this.leader.play('run', 0);
     this.leaderRing = new THREE.Mesh(
       new THREE.RingGeometry(0.32, 0.46, 28),
@@ -291,12 +294,14 @@ export class BattleRenderer {
         const og = cfg.characters.characters.find((c) => c.id === rival.defaultLeaderId)!;
         bossLook = { ...lookFromOutfit(og.outfit, og.skinTone, 'bat'), bulk: 1.45 };
       }
-      const mesh = buildSkinnedMesh(bossLook, 'hi', mat);
+      const rigged = this.rig(bossLook, mat, bossClips());
+      const mesh = rigged.object;
       mesh.castShadow = true;
       mesh.scale.setScalar(b.def.heightMultOfCrew);
       mesh.rotation.y = Math.PI;
       mesh.position.set(b.x, 0, b.z);
       const chest = mesh.getObjectByName('chest')!;
+      const lightScale = rigged.modeled ? 1 / rigged.fit : 1;
       const light = (c: string, x: number) => {
         const m = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.08), new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(3) }));
         m.position.set(x, 0.1, 0);
@@ -309,9 +314,16 @@ export class BattleRenderer {
       const shield = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.85, 0.04), new THREE.MeshToonMaterial({ color: '#9fb3cc', transparent: true, opacity: 0.85, gradientMap: mat.gradientMap }));
       shield.position.set(0, -0.12, 0.22);
       shield.visible = false;
-      mesh.getObjectByName('foreArmL')!.add(shield);
+      (mesh.getObjectByName('handslot.l') ?? mesh.getObjectByName('foreArmL')!).add(shield);
+      if (rigged.modeled) {
+        // bones live inside the fitted model: undo its scale so the gear keeps its authored size
+        for (const o of [red, blue, shield]) o.scale.setScalar(lightScale);
+        red.position.multiplyScalar(lightScale);
+        blue.position.multiplyScalar(lightScale);
+        shield.position.set(0, 0, 0.25 * lightScale);
+      }
       this.level.add(mesh);
-      const actor = new RiggedActor(mesh, bossClips());
+      const actor = new RiggedActor(mesh, rigged.clips);
       actor.play('idle', 0);
       this.boss = { actor, mat, red, blue, shield, flash: 0, telegraph: null, enraged: false, dead: false };
     }
@@ -319,6 +331,15 @@ export class BattleRenderer {
     this.camPos.set(0, cfg.game.camera.height, battle.crowd.z - cfg.game.camera.back);
     this.camLook.set(0, 0, battle.crowd.z + cfg.game.camera.lookAhead);
     this.bossFocus = 0;
+  }
+
+  /** A rigged character: the modeled KayKit rig when loaded, else the procedural one. */
+  private rig(look: Look, mat: THREE.Material, fallbackClips: Record<string, THREE.AnimationClip>): { object: THREE.Object3D; clips: Record<string, THREE.AnimationClip>; modeled: boolean; fit: number } {
+    if (kayKitReady()) {
+      const a = kayKitActor(specFromLook(look), mat);
+      return { ...a, modeled: true, fit: a.object.children[0].scale.y };
+    }
+    return { object: buildSkinnedMesh(look, 'hi', mat), clips: fallbackClips, modeled: false, fit: 1 };
   }
 
   private ensureEnemyArrays(n: number): void {
@@ -903,8 +924,13 @@ export class BattleRenderer {
         p.glow!.position.y = p.icon.position.y;
         (p.glow!.material as THREE.SpriteMaterial).opacity = 0.5 + Math.sin(this.time * 5 + o.id) * 0.2;
       }
+      if (o.speed > 0) {
+        // cop cars drive at the crew: follow the sim and rock on the suspension
+        p.group.position.z = o.z;
+        p.group.rotation.x = o.driving ? Math.sin(this.time * 18 + o.id) * 0.015 : 0;
+      }
       if (o.kind === 'cruiser') {
-        const on = Math.sin(this.time * 14) > 0;
+        const on = Math.sin(this.time * (o.driving ? 20 : 14)) > 0;
         const r = p.group.getObjectByName('lightR');
         const b = p.group.getObjectByName('lightB');
         if (r) r.visible = on;
