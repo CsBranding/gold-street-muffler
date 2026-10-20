@@ -66,9 +66,12 @@ function readAtlas(tex: THREE.Texture | null): Source['atlas'] {
 export function loadKayKit(base = 'assets/models/'): Promise<boolean> {
   if (loading) return loading;
   const loader = new GLTFLoader();
+  // a single-file build can inline the models as data: URIs
+  const inlined = (globalThis as { __BW_MODELS?: Record<string, string> }).__BW_MODELS;
+  const url = (name: string) => inlined?.[name] ?? `${base}${name}.glb`;
   loading = Promise.all([
     ...MODELS.map(async (m) => {
-      const gltf = await loader.loadAsync(`${base}${m}.glb`);
+      const gltf = await loader.loadAsync(url(m));
       let tex: THREE.Texture | null = null;
       gltf.scene.traverse((o) => {
         const mesh = o as THREE.Mesh;
@@ -77,7 +80,7 @@ export function loadKayKit(base = 'assets/models/'): Promise<boolean> {
       sources.set(m, { scene: gltf.scene, clips: new Map(gltf.animations.map((a) => [a.name, a])), atlas: readAtlas(tex) });
     }),
     (async () => {
-      const gltf = await loader.loadAsync(`${base}city.glb`);
+      const gltf = await loader.loadAsync(url('city'));
       for (const c of [...gltf.scene.children]) props.set(c.name, c);
     })(),
   ])

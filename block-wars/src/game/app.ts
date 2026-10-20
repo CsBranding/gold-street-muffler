@@ -19,6 +19,7 @@ import * as meta from './meta';
 import { MetaScreens } from './metaScreens';
 import { computeResult, type LevelResult } from './results';
 import { GameSession } from './session';
+import { warmCrowds } from '../render/looks';
 
 type Screen = 'splash' | 'hub' | 'play' | 'results' | 'select';
 
@@ -353,6 +354,7 @@ export class App {
   private showHub(): void {
     if (!this.session?.autoplay) this.startAttract();
     const sel = this.save.data.selection;
+    warmCrowds(this.cfg, sel.factionId, sel.leaderId);
     const maps = [...this.cfg.levels.maps].sort((a, b) => a.unlockOrder - b.unlockOrder);
     const map = maps.find((m) => m.id === sel.mapId) ?? maps[0];
     const cleared = this.save.data.progress[map.id] ?? 0;

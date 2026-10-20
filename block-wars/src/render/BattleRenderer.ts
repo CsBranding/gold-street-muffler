@@ -16,6 +16,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { BlobShadows, RiggedActor, UnitFamily, type CrowdClip } from './crowds';
 import { kayKitActor, kayKitReady, specFromLook } from './kaykit';
+import { crewLooks, enemyLook } from './looks';
 import { Debris, Particles, Shockwaves, Tracers } from './effects';
 import { buildEnvironment, type Environment } from './environment';
 import { buildProp } from './props';
@@ -223,11 +224,11 @@ export class BattleRenderer {
     // crew: two outfit variants from the faction roster so crowds don't look cloned
     const chars = cfg.characters.characters.filter((c) => c.factionId === faction.id);
     const leaderChar = chars.find((c) => c.id === battle.loadout.leaderId) ?? chars[0];
-    const variants = [leaderChar, ...chars.filter((c) => c !== leaderChar)].slice(0, 2);
+    const variants = crewLooks(cfg, faction.id, leaderChar.id);
     const maxCrew = cfg.game.render.maxCrewInstances;
     const r = cfg.game.render;
     const cap = Math.ceil(maxCrew / variants.length);
-    this.crew = variants.map((c) => new UnitFamily(this.level, lookFromOutfit(c.outfit, c.skinTone), cap, r.maxCorpses, faction.colors.primary));
+    this.crew = variants.map((look) => new UnitFamily(this.level, look, cap, r.maxCorpses, faction.colors.primary));
     const leaderLook = lookFromOutfit(leaderChar.outfit, battle.loadout.cosmetic.skinTone ?? leaderChar.skinTone);
     if (battle.loadout.cosmetic.hat) leaderLook.hat = battle.loadout.cosmetic.hat as Look['hat'];
     const leaderMat = stylizedMaterial({ rim: faction.colors.primary, rimStrength: 0.6 });
@@ -261,21 +262,12 @@ export class BattleRenderer {
 
     // enemies: one animated family per unit type that can appear (authored hordes + boss spawns)
     const police = cfg.factions.police.colors;
-    const rivalChars = cfg.characters.characters.filter((c) => c.factionId === rival.id);
     const present = new Set<number>();
     for (let i = 0; i < battle.level.enemies.count; i++) present.add(battle.level.enemies.defIndex[i]);
     for (const a of battle.level.boss?.def.attacks ?? []) for (const sp of a.spawn) present.add(battle.level.enemyDefs.findIndex((d) => d.id === sp.enemyId));
     battle.level.enemyDefs.forEach((def, di) => {
       if (def.role !== 'unit' || !present.has(di)) return;
-      let look: Look;
-      if (def.side === 'police') {
-        const v = def.id.includes('riot') ? 'riot' : def.id.includes('swat') ? 'swat' : def.id.includes('motor') ? 'motor' : 'patrol';
-        look = copLook(police, v);
-      } else {
-        const rc = rivalChars[Math.min(rivalChars.length - 1, ['rival_shooter', 'rival_enforcer', 'rival_runner', 'rooftop_shooter'].indexOf(def.id))] ?? rivalChars[0];
-        look = lookFromOutfit(rc.outfit, rc.skinTone, def.id === 'rival_enforcer' ? 'bat' : 'pistol');
-        if (def.id === 'rival_enforcer') look.bulk = 1.2;
-      }
+      const look = enemyLook(cfg, def, rival.id);
       this.enemies.set(di, new UnitFamily(this.level, look, r.maxEnemyInstances, r.maxCorpses, def.side === 'police' ? '#7fa8ff' : rival.colors.primary));
     });
     this.ensureEnemyArrays(battle.level.enemies.hp.length);
