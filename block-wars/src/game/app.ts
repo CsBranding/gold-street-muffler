@@ -359,13 +359,22 @@ export class App {
     const authored = new Map(map.levels.map((l) => [l.number, l]));
     const next = map.levels.find((l) => l.number > cleared);
     const nodes: string[] = [];
-    for (let n = 10; n >= 1; n--) {
+    // top-down from level 1 so the playable level is on screen without scrolling;
+    // runs of unbuilt levels collapse into one "coming soon" row
+    for (let n = 1; n <= 10; n++) {
       const l = authored.get(n);
-      const done = n <= cleared && !!l;
-      const open = !!l && (done || l === next);
-      const cls = [done ? 'done' : '', open && !done ? 'next' : '', !l ? 'soon' : '', !open ? 'locked' : '', l?.isBoss ? 'boss' : ''].join(' ');
+      if (!l) {
+        let end = n;
+        while (end < 10 && !authored.has(end + 1)) end++;
+        nodes.push(`<div class="node soon"><b>${n === end ? n : `${n}–${end}`}</b><small>Coming soon</small></div>`);
+        n = end;
+        continue;
+      }
+      const done = n <= cleared;
+      const open = done || l === next;
+      const cls = [done ? 'done' : '', open && !done ? 'next' : '', !open ? 'locked' : '', l.isBoss ? 'boss' : ''].join(' ');
       nodes.push(`<button class="node ${cls}" ${open ? `data-level="${n}"` : 'disabled'}>
-          <b>${l?.isBoss ? 'BOSS' : n}</b><small>${l ? esc(l.name) : 'Coming soon'}</small></button>`);
+          <b>${l.isBoss ? `BOSS` : n}</b><small>${esc(l.name)}</small>${done ? '<i class="check">✓</i>' : open ? '<i class="go">PLAY</i>' : ''}</button>`);
     }
     const f = this.faction();
     this.setScreen('hub', `
@@ -377,8 +386,6 @@ export class App {
           </div>
           <h2>${esc(map.displayName.toUpperCase())}</h2>
         </div>
-        <div class="path">${nodes.join('')}</div>
-        ${'' /* map strip */}
         <div class="maps">
           ${maps
             .map((m) => {
@@ -387,9 +394,12 @@ export class App {
             })
             .join('')}
         </div>
+        <div class="path">${nodes.join('')}</div>
         ${this.metaUi.nav('play')}
       </div>`);
     this.metaUi.bindNav();
+    this.screenEl.querySelector('.node.next')?.scrollIntoView({ block: 'nearest' });
+    this.screenEl.querySelector('.mapcard.on')?.scrollIntoView({ block: 'nearest', inline: 'center' });
     for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('[data-level]'))
       el.addEventListener('click', () => this.play(map, authored.get(Number(el.dataset.level))!));
     for (const el of this.screenEl.querySelectorAll<HTMLButtonElement>('[data-map]'))

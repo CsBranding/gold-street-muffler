@@ -68,7 +68,8 @@ export class GameSession {
     const move = (e: PointerEvent) => {
       if (!this.dragging) return;
       const w = el.clientWidth || 1;
-      this.battle.setSteerTarget(this.dragAnchor + ((e.clientX - this.dragStartPx) / w) * this.cfg.game.input.dragMetersPerScreen);
+      // the camera looks down +z, so screen-right is world -x
+      this.battle.setSteerTarget(this.dragAnchor - ((e.clientX - this.dragStartPx) / w) * this.cfg.game.input.dragMetersPerScreen);
     };
     const up = () => (this.dragging = false);
     const key = (e: KeyboardEvent, v: boolean) => {
@@ -119,7 +120,7 @@ export class GameSession {
     if (scale > 0) {
       if (this.autoplay) b.setSteerTarget(botSteer(b));
       else if (this.keys.left || this.keys.right) {
-        const dir = (this.keys.right ? 1 : 0) - (this.keys.left ? 1 : 0);
+        const dir = (this.keys.left ? 1 : 0) - (this.keys.right ? 1 : 0); // screen-right is world -x
         b.setSteerTarget(b.crowd.x + dir * 2.5);
       }
       this.acc += dt * scale;

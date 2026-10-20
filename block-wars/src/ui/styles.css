@@ -244,3 +244,13 @@ body { font-family: var(--font); color: #fff; user-select: none; -webkit-user-se
 .modal { z-index: 6; }
 .hud-left { position: relative; }
 .rank { position: absolute; left: 40px; top: 40px; min-width: 26px; height: 22px; padding: 0 5px; border-radius: 11px; background: #ffc61a; color: #3b2600; border: 2px solid #fff; font: 12px var(--font); display: grid; place-items: center; }
+
+/* hub: maps first, then levels top-down */
+.hub .maps { padding: 0 0 8px; justify-content: flex-start; }
+.hub .mapcard { min-width: 104px; padding: 12px 10px; }
+.hub .path { justify-content: flex-start; }
+.node { position: relative; }
+.node .go, .node .check { position: absolute; right: 12px; font-style: normal; font-size: 13px; }
+.node .go { padding: 3px 8px; border-radius: 8px; background: #fff; color: #7a0d14; }
+.node .check { color: #3ee26b; font-size: 18px; }
+.node.soon { opacity: 0.35; border-style: dashed; }
