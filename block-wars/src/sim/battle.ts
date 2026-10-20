@@ -8,7 +8,7 @@ import { crowdExtents, unitOffset, type CrowdExtents } from './formation';
 import { addEnemy, compileLevel, hordeSlotOffset } from './level';
 import type { Loadout } from './loadout';
 import { Rng } from './rng';
-import type { BannerKey, CompiledLevel, HordeRT, LaneWallRT, ObstacleRT, PickupRT, TelegraphRT } from './world';
+import type { BannerKey, CompiledLevel, HordeRT, ObstacleRT, PickupRT, TelegraphRT } from './world';
 
 export type SimEvent =
   | { t: 'banner'; key: BannerKey }
@@ -78,7 +78,6 @@ export class Battle {
   leader = { weapon: null as unknown as Weapon, ammo: 0, reloadT: 0, cooldown: 0, climb: 0 };
   buffs = { lowrider: 0, dirtBike: 0, armor: false };
   pickups: PickupRT[] = [];
-  laneLock: { wall: LaneWallRT; lane: number } | null = null;
   focus: Focus = 'nearest';
   /** crew damage multiplier this tick (helicopter spotlight) */
   private exposure = 1;
@@ -198,46 +197,23 @@ export class Battle {
     this.crowd.steerSlow = 1;
     const dx = this.crowd.targetX - this.crowd.x;
     this.crowd.x += Math.max(-s, Math.min(s, dx));
+    // no lane walls: the crew can cross the whole road
     const margin = Math.min(this.ext.halfWidth * 0.6, half - 0.4);
-    let lo = -half + margin;
-    let hi = half - margin;
-
-    // Lane walls: once the leader is past the barricade line the lane is locked.
-    if (this.laneLock && this.crowd.z > this.laneLock.wall.z1) this.laneLock = null;
-    if (!this.laneLock) {
-      for (const w of this.level.walls) {
-        if (this.crowd.z >= w.z0 && this.crowd.z <= w.z1) {
-          this.laneLock = { wall: w, lane: this.laneOf(w, this.crowd.x) };
-          break;
-        }
-      }
-    }
-    if (this.laneLock) {
-      const { wall, lane } = this.laneLock;
-      const lw = wall.edges[lane + 1] - wall.edges[lane];
-      const m = Math.min(margin, lw / 2 - 0.3);
-      lo = wall.edges[lane] + m;
-      hi = wall.edges[lane + 1] - m;
-    }
-    this.crowd.x = Math.max(lo, Math.min(hi, this.crowd.x));
+    this.crowd.x = Math.max(-half + margin, Math.min(half - margin, this.crowd.x));
   }
 
-  laneOf(w: LaneWallRT, x: number): number {
-    for (let i = 0; i < w.edges.length - 2; i++) if (x < w.edges[i + 1]) return i;
-    return w.edges.length - 2;
+  /** Lane bounds the crew is in: a lane segment's own split when near one, otherwise 3 equal lanes. */
+  currentLane(): { x0: number; x1: number } {
+    const half = this.cfg.game.road.width / 2;
+    let edges: number[] | null = null;
+    for (const w of this.level.walls) if (this.crowd.z >= w.z0 - 30 && this.crowd.z <= w.z1) edges = w.edges;
+    if (!edges) edges = [-half, -half / 3, half / 3, half];
+    const x = this.crowd.x;
+    for (let i = 0; i < edges.length - 1; i++) if (x < edges[i + 1] || i === edges.length - 2) return { x0: edges[i], x1: edges[i + 1] };
+    return { x0: -half, x1: half };
   }
 
-  /** Obstacles inside a lane segment only interact with the crew's own lane. */
-  private obstacleReachable(o: ObstacleRT): boolean {
-    for (const w of this.level.walls) {
-      if (o.z >= w.z0 && o.z <= w.z1) {
-        if (o.kind === 'barricade' && !this.laneLock) return true;
-        const lane = this.laneLock && this.laneLock.wall === w ? this.laneLock.lane : this.laneOf(w, this.crowd.x);
-        return this.laneOf(w, o.x) === lane;
-      }
-    }
-    return true;
-  }
+
 
   private move(dt: number): void {
     const g = this.cfg.game;
@@ -248,10 +224,13 @@ export class Battle {
 
     for (const o of this.level.obstacles) {
       if (!o.alive) continue;
+      if (o.speed > 0) {
+        this.driveCopCar(o, dt, front);
+        continue;
+      }
       const face = o.z - o.halfD;
       if (face < front - 0.6 || face > front + 3) continue;
       if (Math.abs(o.x - this.crowd.x) > o.halfW + this.ext.halfWidth * 0.6) continue;
-      if (!this.obstacleReachable(o)) continue;
       if (face < maxFront) maxFront = face;
     }
     if (maxFront <= front + 0.02) blocked = true;
@@ -266,6 +245,17 @@ export class Battle {
       if (h.rooftop) {
         // ledge shooters never block the road; once passed they're out of the fight
         if (h.anchorZ < this.crowd.z - this.ext.back - 3) this.retireHorde(h);
+        continue;
+      }
+      // squads only stop the crew when they stand in its path; others get run past
+      const blockHalf = ((h.columns - 1) * g.horde.spacing) / 2 + 0.3;
+      const inPath = Math.abs(h.x - this.crowd.x) < blockHalf + this.ext.halfWidth * 0.7;
+      if (!inPath) {
+        h.engaged = false;
+        if (h.state === 'contact') h.state = 'advancing';
+        if (h.state === 'advancing') h.anchorZ -= h.speed * h.slowMult * dt * 0.5;
+        if (h.anchorZ + Math.ceil(h.alive / h.columns) * g.horde.spacing < this.crowd.z - this.ext.back - 2) this.retireHorde(h);
+        this.layoutHorde(h);
         continue;
       }
       // hold where the squad weapon can actually reach (shotguns step in closer)
@@ -310,6 +300,30 @@ export class Battle {
     this.crowd.prevZ = this.crowd.z;
     const newFront = Math.min(front + speed * dt, Math.max(front, maxFront));
     this.crowd.z += newFront - front;
+  }
+
+  /** Cop cars wake up near the crew and drive down their lane; reaching the crowd rams it. */
+  private driveCopCar(o: ObstacleRT, dt: number, front: number): void {
+    const cc = this.cfg.game.copCars;
+    if (!o.driving && o.z - front < cc.triggerRange) o.driving = true;
+    if (!o.driving) return;
+    o.z -= o.speed * dt;
+    if (o.z - o.halfD <= front && o.z + o.halfD >= this.crowd.z - this.ext.back) {
+      if (Math.abs(o.x - this.crowd.x) < o.halfW + this.ext.halfWidth * 0.7) {
+        o.alive = false;
+        o.hp = 0;
+        this.events.push({ t: 'explode', x: o.x, z: o.z, r: 3 });
+        this.events.push({ t: 'obstacleDestroyed', id: o.id, x: o.x, z: o.z, kind: o.kind });
+        if (this.crowd.invuln <= 0) {
+          const kills = Math.min(this.crowd.followers, cc.ramKills);
+          this.crowd.followers -= kills;
+          if (kills) this.events.push({ t: 'crewLost', n: kills, cause: 'fire' });
+          if (this.crowd.followers === 0) this.damageLeader(cc.ramKills * 4);
+        }
+        this.ext = this.extents();
+      }
+    }
+    if (o.z < this.crowd.z - this.ext.back - 6) o.alive = false; // drove past
   }
 
   private retireHorde(h: HordeRT): void {
@@ -466,7 +480,12 @@ export class Battle {
     const hw = this.ext.halfWidth;
     const tanCone = Math.tan(c.targetConeDeg * DEG);
     const focusSide = this.loadout.mode === 'all_out' && this.focus !== 'nearest' ? this.focus : null;
+    // the crew only works its own lane
+    const lane = this.currentLane();
+    const halfRoad = this.cfg.game.road.width / 2;
     const consider = (kind: number, idx: number, x: number, z: number, halfW: number, penalty = 0) => {
+      const lx = Math.max(-halfRoad, Math.min(halfRoad, x));
+      if (lx + halfW < lane.x0 - 0.25 || lx - halfW > lane.x1 + 0.25) return;
       const dz = z - oz;
       if (dz < -1.5) return;
       const dx = x - ox;
@@ -476,7 +495,7 @@ export class Battle {
       if (lat > Math.max(0, dz) * tanCone + 1) return;
       this.pushCandidate(kind, idx, x, z, dist, dist + lat * c.lateralTargetPenalty + penalty);
     };
-    for (const o of this.level.obstacles) if (o.alive && this.obstacleReachable(o)) consider(K_OBSTACLE, o.id, o.x, o.z - o.halfD, o.halfW);
+    for (const o of this.level.obstacles) if (o.alive) consider(K_OBSTACLE, o.id, o.x, o.z - o.halfD, Math.min(o.halfW, 0.5));
     const e = this.level.enemies;
     for (const h of this.level.hordes) {
       if (h.state === 'idle' || h.state === 'dead') continue;
@@ -723,6 +742,8 @@ export class Battle {
         }
       }
       const contact = h.state === 'contact';
+      const lane = this.currentLane();
+      const offLane = !h.rooftop && (h.x < lane.x0 || h.x > lane.x1) ? c.offLaneFireMult : 1;
       const frontage = Math.max(1, Math.min(h.columns, Math.ceil((this.ext.halfWidth * 2) / this.cfg.game.horde.spacing)));
       for (const idx of h.units) {
         if (!e.alive[idx]) continue;
@@ -730,7 +751,7 @@ export class Battle {
         if (def.dps > 0) {
           const dx = e.x[idx] - fx;
           const dz = e.z[idx] - fz;
-          if (dx * dx + dz * dz <= def.rangeM * def.rangeM) dmg += def.dps * dt * split;
+          if (dx * dx + dz * dz <= def.rangeM * def.rangeM) dmg += def.dps * dt * split * offLane;
         }
         if (contact && e.slot[idx] < frontage) dmg += def.meleeDps * dt * split;
       }
@@ -1092,6 +1113,8 @@ export class Battle {
           explodeDamage: def.explodeDamage,
           explodeRadius: def.explodeRadius,
           spawned: true,
+          speed: 0,
+          driving: false,
         });
       }
     });

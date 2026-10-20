@@ -31,6 +31,9 @@ export interface ObstacleRT {
   explodeRadius: number;
   /** spawned mid-boss by Call for Backup */
   spawned: boolean;
+  /** cop cars: driving speed toward the crew (0 = parked obstacle) */
+  speed: number;
+  driving: boolean;
 }
 
 export interface LaneWallRT {

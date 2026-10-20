@@ -37,7 +37,6 @@ export function botSteer(b: Battle): number {
   // Lane choice: simulate each lane's gates/rewards, penalize barricade HP.
   for (const w of L.walls) {
     if (w.z1 < cz || w.z0 - cz > 40) continue;
-    if (b.laneLock && b.laneLock.wall === w) return (w.edges[b.laneLock.lane] + w.edges[b.laneLock.lane + 1]) / 2;
     let best = 0;
     let bestScore = -Infinity;
     for (let i = 0; i < w.edges.length - 1; i++) {
@@ -69,6 +68,30 @@ export function botSteer(b: Battle): number {
     const pick = row.reduce((a, c) => (applyOp(b.crewCount, c) > applyOp(b.crewCount, a) ? c : a));
     return (pick.x0 + pick.x1) / 2;
   }
+
+  // Squads and cop cars: take the lane we can win; shoot down cars we can kill, dodge the rest.
+  const laneW = (half * 2) / 3;
+  const lanes3 = [-laneW, 0, laneW];
+  let threat = false;
+  const laneScore = lanes3.map((x) => -Math.abs(x - b.crowd.x) * 0.3);
+  for (const h of L.hordes) {
+    if (h.state === 'dead' || h.rooftop || h.alive === 0) continue;
+    const dz = h.anchorZ - cz;
+    if (dz < -2 || dz > 40) continue;
+    threat = true;
+    const li = Math.max(0, Math.min(2, Math.round(h.x / laneW) + 1));
+    laneScore[li] -= h.alive * (1 + Math.max(0, 30 - dz) / 30);
+  }
+  for (const o of L.obstacles) {
+    if (!o.alive || o.speed <= 0) continue;
+    const dz = o.z - cz;
+    if (dz < -2 || dz > 50) continue;
+    threat = true;
+    const li = Math.max(0, Math.min(2, Math.round(o.x / laneW) + 1));
+    const canKill = b.crewCount * 60 > o.hp; // rough squad burst over the approach
+    laneScore[li] += canKill ? (o.reward ? 12 : 0) : -b.cfg.game.copCars.ramKills * 2;
+  }
+  if (threat) return lanes3[laneScore.indexOf(Math.max(...laneScore))];
 
   // Loot: aim at the nearest rewarding obstacle, otherwise hold center.
   let target = 0;

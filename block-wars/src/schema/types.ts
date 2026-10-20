@@ -22,6 +22,7 @@ export type LevelsFile = z.infer<typeof S.LevelsFileSchema>;
 export type MapDef = z.infer<typeof S.MapSchema>;
 export type LevelDef = z.infer<typeof S.LevelSchema>;
 export type Segment = z.infer<typeof S.SegmentSchema>;
+export type HordeSpec = Pick<Extract<Segment, { kind: 'horde' }>, 'side' | 'enemies' | 'columns' | 'pickups' | 'x'>;
 export type Gate = z.infer<typeof S.GateSchema>;
 export type Reward = z.infer<typeof S.RewardSchema>;
 export type ObstacleKind = z.infer<typeof S.ObstacleKindSchema>;

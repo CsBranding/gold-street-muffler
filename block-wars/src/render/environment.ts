@@ -13,7 +13,7 @@ export interface Environment {
   update(t: number, cameraZ: number): void;
 }
 
-export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: number, wallHeight: number): Environment {
+export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: number, _wallHeight: number): Environment {
   const th = map.theme;
   const group = new THREE.Group();
   const half = roadWidth / 2;
@@ -94,21 +94,6 @@ export function buildEnvironment(map: MapDef, level: CompiledLevel, roadWidth: n
     lamp.position.set(s * (half - 0.5), 5.88, z);
     pole.castShadow = true;
     group.add(pole, arm, lamp);
-  }
-
-  // Lane walls (low dividers) inside lane segments
-  const wallMat = toon('#e2ded6');
-  const capMat = toon('#2a6fd6');
-  for (const w of level.walls) {
-    for (let i = 1; i < w.edges.length - 1; i++) {
-      const l = w.z1 - w.z0;
-      const wall = new THREE.Mesh(new THREE.BoxGeometry(0.4, wallHeight, l), wallMat);
-      wall.position.set(w.edges[i], wallHeight / 2, (w.z0 + w.z1) / 2);
-      const cap = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.08, l), capMat);
-      cap.position.set(w.edges[i], wallHeight + 0.04, (w.z0 + w.z1) / 2);
-      wall.castShadow = wall.receiveShadow = true;
-      group.add(wall, cap);
-    }
   }
 
   // Finish line

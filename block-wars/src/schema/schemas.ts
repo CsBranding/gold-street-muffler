@@ -249,6 +249,8 @@ export const ObstacleSchema = z.object({
   at: nonNeg,
   rarity: RaritySchema,
   reward: RewardSchema.nullable(),
+  /** >0: a vehicle that drives down its lane at the crew (m/s); rams if not shot down */
+  speed: nonNeg.default(0),
 });
 export const LaneItemSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('gate'), at: nonNeg, gate: GateSchema }),
@@ -291,6 +293,19 @@ export const SegmentSchema = z.discriminatedUnion('kind', [
     x: z.number().min(-1).max(1).default(0),
     /** extra forward offset from the segment start (m) */
     offset: nonNeg.default(0),
+  }),
+  z.object({
+    kind: z.literal('squads'),
+    length: pos,
+    side: z.enum(['enemy', 'police', 'rival']),
+    /** small squads, each standing in one lane (-1 left, 0 middle, 1 right) */
+    squads: z.array(
+      z.object({ at: nonNeg, lane: z.number().int().min(-1).max(1), columns: z.number().int().positive().default(4), enemies: z.array(HordeEntrySchema).min(1) }),
+    ),
+    /** cop cars that drive down a lane at the crew: shoot them for the reward, or get rammed */
+    cars: z
+      .array(z.object({ at: nonNeg, lane: z.number().int().min(-1).max(1), hp: pos, speed: pos, rarity: RaritySchema, reward: RewardSchema.nullable() }))
+      .default([]),
   }),
   z.object({
     kind: z.literal('hazard'),
@@ -465,6 +480,8 @@ export const GameFileSchema = z.object({
     reviveInvulnSec: nonNeg,
     /** extra target score per meter a target sits outside the crowd's width */
     lateralTargetPenalty: nonNeg,
+    /** fire from squads in other lanes lands at this fraction (they can't be shot back) */
+    offLaneFireMult: frac,
     /** half-angle of the forward targeting cone */
     targetConeDeg: z.number().min(1).max(89),
     startCrew: z.number().int().min(0),
@@ -557,6 +574,12 @@ export const GameFileSchema = z.object({
     bossDamageMult: nonNeg,
     /** target score penalty (m) for the side the player isn't focusing */
     focusPenalty: nonNeg,
+  }),
+  copCars: z.object({
+    /** distance at which a parked cop car starts driving at the crew */
+    triggerRange: pos,
+    /** crew knocked out when one rams the crowd */
+    ramKills: z.number().int().min(0),
   }),
   hazards: z.object({
     spotlightWidth: pos,

@@ -180,6 +180,11 @@
           "type": "number",
           "minimum": 0
         },
+        "offLaneFireMult": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         "targetConeDeg": {
           "type": "number",
           "minimum": 1,
@@ -210,6 +215,7 @@
         "maxCrew",
         "reviveInvulnSec",
         "lateralTargetPenalty",
+        "offLaneFireMult",
         "targetConeDeg",
         "startCrew",
         "squadStartWeaponId"
@@ -727,6 +733,25 @@
       ],
       "additionalProperties": false
     },
+    "copCars": {
+      "type": "object",
+      "properties": {
+        "triggerRange": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ramKills": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "triggerRange",
+        "ramKills"
+      ],
+      "additionalProperties": false
+    },
     "hazards": {
       "type": "object",
       "properties": {
@@ -862,6 +887,7 @@
     "banners",
     "runCap",
     "allOut",
+    "copCars",
     "hazards",
     "audio",
     "feel",

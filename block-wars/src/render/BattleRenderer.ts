@@ -625,9 +625,6 @@ export class BattleRenderer {
     this.shownCount = count;
     const feel = cfg.game.feel;
 
-    const lock = battle.laneLock;
-    const lo = lock ? lock.wall.edges[lock.lane] + 0.2 : -Infinity;
-    const hi = lock ? lock.wall.edges[lock.lane + 1] - 0.2 : Infinity;
     const roadHalf = cfg.game.road.width / 2 - 0.15;
     const k = Math.min(1, dt * 8);
     const clip = this.crewClip(battle);
@@ -647,7 +644,6 @@ export class BattleRenderer {
       if (this.pop[i] < 1) this.pop[i] = Math.min(1, this.pop[i] + dt / (this.leap[i] ? feel.recruitLeapSec : 0.2));
       let x = this.crowdX + this.dispX[i];
       const z = this.crowdZ + this.dispZ[i];
-      if (lock && z > lock.wall.z0 && z < lock.wall.z1) x = Math.max(lo, Math.min(hi, x));
       for (const o of blockers) {
         const hw = o.halfW + 0.15;
         if (Math.abs(z - o.z) < o.halfD + 0.2 && Math.abs(x - o.x) < hw) x = x < o.x ? o.x - hw : o.x + hw;

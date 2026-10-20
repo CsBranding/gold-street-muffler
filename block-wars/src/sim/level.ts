@@ -1,4 +1,4 @@
-import type { BattleMode, EnemyDef, GameConfig, LevelDef, MapDef, Segment } from '../schema/types';
+import type { BattleMode, EnemyDef, GameConfig, HordeSpec, LevelDef, MapDef, Segment } from '../schema/types';
 import type { CompiledLevel, EnemyStore, GateRT, HordeRT, ObstacleRT } from './world';
 
 export function difficultyScale(cfg: GameConfig, map: MapDef, levelNumber: number): number {
@@ -113,7 +113,7 @@ export function compileLevel(cfg: GameConfig, map: MapDef, level: LevelDef, mode
   let obstacleId = 0;
   const halfWidthOf = (kind: string, laneHalf: number) =>
     kind === 'barricade' ? laneHalf - 0.08 : g.road.obstacleHalfWidth[kind as 'barrel' | 'crate' | 'dumpster' | 'cruiser'];
-  const addObstacle = (o: Omit<ObstacleRT, 'id' | 'alive' | 'maxHp' | 'explodeDamage' | 'explodeRadius' | 'spawned'>) => {
+  const addObstacle = (o: Omit<ObstacleRT, 'id' | 'alive' | 'maxHp' | 'explodeDamage' | 'explodeRadius' | 'spawned' | 'speed' | 'driving'> & { speed?: number }) => {
     const hp = Math.max(1, Math.round(o.hp * scale));
     const isCruiser = o.kind === 'cruiser' && cruiserDef;
     out.obstacles.push({
@@ -125,6 +125,8 @@ export function compileLevel(cfg: GameConfig, map: MapDef, level: LevelDef, mode
       explodeDamage: isCruiser ? cruiserDef.explodeDamage : 0,
       explodeRadius: isCruiser ? cruiserDef.explodeRadius : 0,
       spawned: false,
+      speed: o.speed ?? 0,
+      driving: false,
     });
   };
   const addGate = (z: number, x0: number, x1: number, op: GateRT['op'], value: number, row: number) =>
@@ -133,6 +135,60 @@ export function compileLevel(cfg: GameConfig, map: MapDef, level: LevelDef, mode
   let z = 0;
   let k = 0;
   const p = { x: 0, z: 0 };
+  const addHorde = (seg: HordeSpec, z0: number, anchorZ: number) => {
+    const hordeId = out.hordes.length;
+    const h: HordeRT = {
+      id: hordeId,
+      segZ: z0,
+      anchorZ,
+      x: 0,
+      columns: seg.columns,
+      units: [],
+      alive: 0,
+      total: 0,
+      state: 'idle',
+      speed: 0,
+      slowMult: 1,
+      slowTimer: 0,
+      engaged: false,
+      pushing: false,
+      hp: 0,
+      maxHp: 0,
+      pickups: seg.pickups.map((pk) => ({ ...pk, x: pk.x * half })),
+      pickupsReleased: false,
+      rooftop: false,
+    };
+    const blockW = (seg.columns - 1) * g.horde.spacing;
+    h.x = Math.max(-half + blockW / 2 + 0.3, Math.min(half - blockW / 2 - 0.3, seg.x * half));
+    let slot = 0;
+    let speedSum = 0;
+    for (const entry of seg.enemies) {
+      const count = Math.max(1, Math.round(entry.count * scale));
+      for (let c = 0; c < count; c++) {
+        const id = resolveEnemyId(cfg, entry.enemyId, seg.side, mode, k++);
+        const di = defIdx.get(id)!;
+        const def = enemyDefs[di];
+        const idx = addEnemy(out.enemies, di, def, hordeId, slot);
+        hordeSlotOffset(slot, h.columns, g.horde.spacing, p);
+        out.enemies.x[idx] = h.x + p.x;
+        out.enemies.z[idx] = h.anchorZ + p.z;
+        h.units.push(idx);
+        h.maxHp += def.hp + def.shieldHp;
+        speedSum += def.speed;
+        slot++;
+      }
+    }
+    // Shields up front: sort so riot units take the front slots.
+    h.units.sort((a, b) => enemyDefs[out.enemies.defIndex[b]].shieldHp - enemyDefs[out.enemies.defIndex[a]].shieldHp || a - b);
+    h.units.forEach((idx, s) => (out.enemies.slot[idx] = s));
+    h.alive = h.total = h.units.length;
+    h.hp = h.maxHp;
+    h.speed = speedSum / h.units.length;
+    h.rooftop = h.speed === 0;
+    if (h.rooftop) h.x = Math.sign(seg.x || 1) * (half + 0.9);
+    hordeLayout(out, h, g.horde.spacing);
+    out.hordes.push(h);
+};
   for (const seg of level.segments as Segment[]) {
     const z0 = z;
     switch (seg.kind) {
@@ -170,63 +226,22 @@ export function compileLevel(cfg: GameConfig, map: MapDef, level: LevelDef, mode
       case 'obstacles': {
         out.banners.push({ z: z0 - g.road.bannerLead, key: 'runItUp', fired: false });
         for (const it of seg.items)
-          addObstacle({ kind: it.kind, x: it.x * half, z: z0 + it.at, halfW: halfWidthOf(it.kind, half), halfD: g.road.obstacleDepth / 2, hp: it.hp, rarity: it.rarity, reward: it.reward });
+          addObstacle({ kind: it.kind, x: it.x * half, z: z0 + it.at, halfW: halfWidthOf(it.kind, half), halfD: g.road.obstacleDepth / 2, hp: it.hp, rarity: it.rarity, reward: it.reward, speed: it.speed });
         z += seg.length;
         break;
       }
-      case 'horde': {
-        const hordeId = out.hordes.length;
-        const h: HordeRT = {
-          id: hordeId,
-          segZ: z0,
-          anchorZ: z0 + g.road.hordeOffset + seg.offset,
-          x: 0,
-          columns: seg.columns,
-          units: [],
-          alive: 0,
-          total: 0,
-          state: 'idle',
-          speed: 0,
-          slowMult: 1,
-          slowTimer: 0,
-          engaged: false,
-          pushing: false,
-          hp: 0,
-          maxHp: 0,
-          pickups: seg.pickups.map((pk) => ({ ...pk, x: pk.x * half })),
-          pickupsReleased: false,
-          rooftop: false,
-        };
-        const blockW = (seg.columns - 1) * g.horde.spacing;
-        h.x = Math.max(-half + blockW / 2 + 0.3, Math.min(half - blockW / 2 - 0.3, seg.x * half));
-        let slot = 0;
-        let speedSum = 0;
-        for (const entry of seg.enemies) {
-          const count = Math.max(1, Math.round(entry.count * scale));
-          for (let c = 0; c < count; c++) {
-            const id = resolveEnemyId(cfg, entry.enemyId, seg.side, mode, k++);
-            const di = defIdx.get(id)!;
-            const def = enemyDefs[di];
-            const idx = addEnemy(out.enemies, di, def, hordeId, slot);
-            hordeSlotOffset(slot, h.columns, g.horde.spacing, p);
-            out.enemies.x[idx] = h.x + p.x;
-            out.enemies.z[idx] = h.anchorZ + p.z;
-            h.units.push(idx);
-            h.maxHp += def.hp + def.shieldHp;
-            speedSum += def.speed;
-            slot++;
-          }
-        }
-        // Shields up front: sort so riot units take the front slots.
-        h.units.sort((a, b) => enemyDefs[out.enemies.defIndex[b]].shieldHp - enemyDefs[out.enemies.defIndex[a]].shieldHp || a - b);
-        h.units.forEach((idx, s) => (out.enemies.slot[idx] = s));
-        h.alive = h.total = h.units.length;
-        h.hp = h.maxHp;
-        h.speed = speedSum / h.units.length;
-        h.rooftop = h.speed === 0;
-        if (h.rooftop) h.x = Math.sign(seg.x || 1) * (half + 0.9);
-        hordeLayout(out, h, g.horde.spacing);
-        out.hordes.push(h);
+      case 'horde':
+        addHorde(seg, z0, z0 + g.road.hordeOffset + seg.offset);
+        z += seg.length;
+        break;
+      case 'squads': {
+        // small squads and cop cars share the road, one lane each
+        out.banners.push({ z: z0 - g.road.bannerLead, key: 'pickLane', fired: false });
+        const laneX = (lane: number) => (lane * W) / 3;
+        for (const sq of seg.squads)
+          addHorde({ side: seg.side, enemies: sq.enemies, columns: sq.columns, pickups: [], x: laneX(sq.lane) / half }, z0, z0 + sq.at);
+        for (const car of seg.cars)
+          addObstacle({ kind: 'cruiser', x: laneX(car.lane), z: z0 + car.at, halfW: Math.min(halfWidthOf('cruiser', half), W / 6 - 0.15), halfD: g.road.obstacleDepth / 2, hp: car.hp, rarity: car.rarity, reward: car.reward, speed: car.speed });
         z += seg.length;
         break;
       }

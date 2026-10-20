@@ -90,6 +90,10 @@ export function parseConfig(raw: Record<keyof GameConfig, unknown>): GameConfig 
       s.enemies.forEach((e) => !enemyIds.has(e.enemyId) && errors.push(`${where}: unknown enemy ${e.enemyId}`));
       s.pickups.forEach((p) => checkReward(where, p.reward));
     }
+    if (s.kind === 'squads') {
+      s.squads.forEach((q) => q.enemies.forEach((e) => !enemyIds.has(e.enemyId) && errors.push(`${where}: unknown enemy ${e.enemyId}`)));
+      s.cars.forEach((c) => checkReward(where, c.reward));
+    }
     if (s.kind === 'boss' && s.bossId !== 'auto' && !bossIds.has(s.bossId)) errors.push(`${where}: unknown boss ${s.bossId}`);
   };
   for (const m of cfg.levels.maps)

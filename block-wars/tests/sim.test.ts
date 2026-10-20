@@ -77,7 +77,6 @@ describe('gates', () => {
     b.crowd.x = (sub.x0 + sub.x1) / 2;
     b.crowd.targetX = b.crowd.x;
     b.crowd.z = sub.z - 0.05;
-    b.laneLock = null;
     b.step();
     expect(b.crewCount).toBe(1);
   });
@@ -229,5 +228,57 @@ describe('performance', () => {
     const msPerTick = (performance.now() - t0) / ticks;
     // 30 Hz sim → must stay far below the 16.6ms frame (target < 4ms on desktop CI).
     expect(msPerTick).toBeLessThan(4);
+  });
+});
+
+describe('lanes, squads and cop cars', () => {
+  const level = map.levels[0];
+  const fresh = () => {
+    const b = new Battle(cfg, map, level, loadout(), 5);
+    b.level.obstacles.forEach((o) => (o.alive = false));
+    b.level.hordes.forEach((h) => (h.state = 'dead'));
+    b.level.gates.forEach((g) => (g.consumed = true));
+    b.crowd.followers = 20;
+    return b;
+  };
+  const car = (b: Battle, x: number, z: number, hp: number) => {
+    const o = { ...b.level.obstacles.find((q) => q.speed > 0)! };
+    Object.assign(o, { id: b.level.obstacles.length, x, z, hp, maxHp: hp, alive: true, driving: false });
+    b.level.obstacles.push(o);
+    return o;
+  };
+  it('authors cop cars and keeps every squad under 50 after scaling', () => {
+    for (const m of cfg.levels.maps)
+      for (const l of m.levels) {
+        const b = new Battle(cfg, m, l, loadout(), 1);
+        expect(b.level.obstacles.some((o) => o.speed > 0), `${m.id} L${l.number}`).toBe(true);
+        for (const h of b.level.hordes) expect(h.total).toBeLessThan(50);
+      }
+  });
+  it('only shoots targets in the crew lane', () => {
+    const b = fresh();
+    const z = b.crowd.z + 50;
+    b.crowd.x = b.crowd.targetX = 0;
+    const side = car(b, 3, z, 1e6);
+    side.speed = 0;
+    for (let i = 0; i < 60; i++) b.step();
+    expect(side.hp).toBe(1e6);
+    side.x = 0;
+    side.z = b.crowd.z + 10;
+    for (let i = 0; i < 30; i++) b.step();
+    expect(side.hp).toBeLessThan(1e6);
+  });
+  it('rams the crew when not shot down, and drops an upgrade when it is', () => {
+    const b = fresh();
+    const tough = car(b, 0, b.crowd.z + 40, 1e7);
+    for (let i = 0; i < 300 && tough.alive; i++) b.step();
+    expect(b.crowd.followers).toBe(20 - cfg.game.copCars.ramKills);
+    const b2 = fresh();
+    const lvl = b2.squad.level;
+    const weak = car(b2, 0, b2.crowd.z + 40, 50);
+    weak.reward = { kind: 'weapon_level', levels: 1 };
+    for (let i = 0; i < 300 && weak.alive; i++) b2.step();
+    expect(b2.squad.level).toBe(lvl + 1);
+    expect(b2.crowd.followers).toBe(20);
   });
 });

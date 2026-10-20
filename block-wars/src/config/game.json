@@ -40,6 +40,7 @@
     "squadStartWeaponId": "pistol_9",
     "reviveInvulnSec": 2.0,
     "lateralTargetPenalty": 2.5,
+    "offLaneFireMult": 0.4,
     "targetConeDeg": 40
   },
   "horde": {
@@ -172,5 +173,9 @@
     "spotlightWidth": 2.6,
     "spotlightSweepSpeed": 1.4,
     "driveBySpeed": 16
+  },
+  "copCars": {
+    "triggerRange": 48,
+    "ramKills": 12
   }
 }
